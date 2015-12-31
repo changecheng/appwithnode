@@ -1,0 +1,162 @@
+{
+    "name": "project1",
+    "author": "zzen1ss",
+    "w": 800,
+    "h": 600,
+    "pageList": [
+        {
+            "name": "page1",
+            "type": "page",
+            "id": "0",
+            "w": 800,
+            "h": 600,
+            "bgImg": "./public/media/images/saber.png",
+            "bgColor": "red",
+            "canvasList": [
+                {
+                    "name": "canvas1",
+                    "type": "canvas",
+                    "id": "0.0",
+                    "w": 400,
+                    "h": 400,
+                    "x": 157,
+                    "y": 33,
+                    "zIndex": 0,
+                    "subCanvasList": [
+                        {
+                            "name": "sc1",
+                            "type": "subCanvas",
+                            "id": "0.0.0",
+                            "zIndex": 0,
+                            "bgColor": "white",
+                            "bgImg": "",
+                            "widgetList": [
+                                {
+                                    "name": "button1",
+                                    "type": "widget",
+                                    "id": "0.0.0.0",
+                                    "w": 50,
+                                    "h": 50,
+                                    "x": 10,
+                                    "y": 10,
+                                    "zIndex": 0,
+                                    "bgColor": "blue",
+                                    "currentSlice": 0,
+                                    "texList": [],
+                                    "triggerList": [],
+                                    "tagList": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "sc2",
+                            "type": "subCanvas",
+                            "id": "0.0.1",
+                            "zIndex": 10,
+                            "widgetList": [
+                                {
+                                    "name": "button2",
+                                    "id": "0.0.1.0",
+                                    "w": 50,
+                                    "h": 50,
+                                    "x": 200,
+                                    "y": 200,
+                                    "zIndex": 0,
+                                    "bgColor": "green",
+                                    "currentSlice": 0,
+                                    "texList": [],
+                                    "triggerList": [],
+                                    "tagList": []
+                                }
+                            ]
+                        }
+                    ],
+                    "canvasActionList": [],
+                    "tagList": []
+                }
+            ],
+            "pageActionList": [],
+            "tagList": [
+                "tag1",
+                "tag2"
+            ]
+        },
+        {
+            "name": "page2",
+            "type": "page",
+            "id": "1",
+            "w": 800,
+            "h": 600,
+            "bgImg": "./public/media/images/moon.jpg",
+            "bgColor": "blue",
+            "canvasList": [
+                {
+                    "name": "canvas2",
+                    "type": "canvas",
+                    "id": "1.0",
+                    "w": 400,
+                    "h": 400,
+                    "x": 50,
+                    "y": 50,
+                    "zIndex": 0,
+                    "subCanvasList": [
+                        {
+                            "name": "sc2",
+                            "type": "subCanvas",
+                            "id": "1.0.0",
+                            "zIndex": 0,
+                            "bgColor": "white",
+                            "bgImg": "",
+                            "widgetList": [
+                                {
+                                    "name": "button3",
+                                    "type": "widget",
+                                    "id": "1.0.0.0",
+                                    "w": 50,
+                                    "h": 50,
+                                    "x": 10,
+                                    "y": 10,
+                                    "zIndex": 0,
+                                    "bgColor": "blue",
+                                    "currentSlice": 0,
+                                    "texList": [],
+                                    "triggerList": [],
+                                    "tagList": []
+                                }
+                            ]
+                        },
+                        {
+                            "name": "sc4",
+                            "type": "subCanvas",
+                            "id": "1.0.1",
+                            "zIndex": 10,
+                            "widgetList": [
+                                {
+                                    "name": "button4",
+                                    "id": "1.0.1.0",
+                                    "w": 50,
+                                    "h": 50,
+                                    "x": 200,
+                                    "y": 200,
+                                    "zIndex": 0,
+                                    "bgColor": "gray",
+                                    "currentSlice": 0,
+                                    "texList": [],
+                                    "triggerList": [],
+                                    "tagList": []
+                                }
+                            ]
+                        }
+                    ],
+                    "canvasActionList": [],
+                    "tagList": []
+                }
+            ],
+            "pageActionList": [],
+            "tagList": [
+                "tag1",
+                "tag2"
+            ]
+        }
+    ]
+}

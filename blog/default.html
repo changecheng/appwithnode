@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<link rel="icon" href="/saber.ico" />
+    <link rel ="apple-touch-icon" href="/media/apple-touch-icon.png" />
+	<title>{{ page.title }} {{ page.top }}</title>
+	{% if page.keywords %}
+	<meta name="keywords" content="{{ page.keywords }}">
+	{% endif %}
+	<script type="text/javascript" src="default.bundle.js"></script>
+
+</head>
+<body>
+<div id='site'>
+<div id='header'></div>
+</div>
+
+{{content}}
+
+<div id="footer">
+	<address>
+		<span class="copyright">
+			Designed by 
+			<a href="/about.html">Zzen1sS</a>
+			(All rights reserved)			
+		</span>
+		<span class="engine">
+			Powered by <a href="http://github.com/mojombo/jekyll/" title="A static, minimalist CMS">Jekyll</a>
+		</span>
+	</address>
+</div>
+</div>
+</body>
+</html>

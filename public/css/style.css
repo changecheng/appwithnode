@@ -1,0 +1,52 @@
+.designer-main-body{
+	overflow: hidden;
+}
+
+.toolbox-wrapper{
+	margin: 0;
+	border:1px solid gray;
+	width:15%;
+	text-align: center;
+	float: left;
+
+}
+.toolbox-button{
+	margin:1px;
+	width:100%;
+}
+
+/*editor*/
+.editor-frame{
+	margin: 0 auto;
+	min-width: 50%;
+	max-width: 68%;
+	float:left;
+}
+
+
+.attr-list {
+	margin:0;
+	width: 15%;
+	text-align: left;
+	border: 1px solid gray;
+	float: right;
+}
+
+.attr-line{
+	margin: 1px;
+	width:100%;
+	text-align: left;
+}
+
+.attr-title{
+	margin-left: 1em;
+}
+
+.attr-name{
+	margin-left: 1em;
+	display: inline-block;
+	width:30%;
+}
+.attr-line>input{
+	width:60%;
+}

@@ -1,0 +1,73 @@
+.editor{
+	margin: 0;
+	padding: 0;
+	border:1px solid gray;
+	overflow: scroll;
+	float: left;
+	width:60%;
+}
+.pageViewer{
+	border:1px solid gray;
+	float: left;
+	width:15%;
+}
+
+.listNumber{
+	display: inline-block;
+	width:20%;
+}
+.pageThumbnail{
+	display: inline-block;
+	width:70%;
+}
+.thumbnail{
+	width:100%;
+}
+
+.rightcolumn{
+	margin: 0;
+	padding: 0;
+	border:1px solid gray;
+	width:15%;
+	height: 700px;
+	position: absolute;
+	right: 1em;
+}
+.attributelist{
+	margin: 0;
+	padding: 0;
+	/*border:1px solid gray;*/
+	height: 65%;
+	overflow: scroll;
+}
+
+.tools{
+	width:15%;
+	border:1px solid gray;
+	margin:0 0 1em 0;
+	padding: 0;
+
+}
+
+.layers{
+	margin: 0;
+	padding: 0;
+	/*border:1px solid gray;*/
+	height: 35%;
+	overflow: scroll;
+}
+
+
+.attributelist{
+	width: 100%;
+}
+.attribute-group{
+	margin: 0;
+	padding: 0;
+}
+
+ul{
+	list-style-type: none;
+	/*margin: 0;
+	padding: 0;*/
+}
