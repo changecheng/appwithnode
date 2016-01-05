@@ -20,7 +20,8 @@ module.exports= React.createClass({
 				author:"xx",
 				w:800,
 				h:600,
-				pageList:[]
+				pageList:[],
+				tagList:[]
 			},
 			curPageIdx:0
 		};	
@@ -108,10 +109,20 @@ module.exports= React.createClass({
 		console.log(this.state.project.pageList);
 		//Actions.updatePageViewer(pageList);
 	},
-	handleUpdateProject:function(page){
-		var pageList = this.state.project.pageList;
-		pageList[this.state.curPageIdx] = page;
-		this.setState({pageList:pageList});	
+	handleUpdateProject:function(projectElem){
+		switch (projectElem.elem){
+			case 'page':
+			var pageList = this.state.project.pageList;
+			pageList[this.state.curPageIdx] = projectElem.value;
+			this.setState({pageList:pageList});	
+			break;
+			case 'tagList':
+			var project = this.state.project;
+			project.tagList = projectElem.value;
+			this.setState({project:project});
+			break;
+		}
+		
 	},
 	handleSaveData:function(){
 		//var url = 'file:///Volumes/Macintosh%20HD/Work/html/appwithnode/public/data/pageData_save.json';
@@ -152,7 +163,7 @@ module.exports= React.createClass({
 				<PageViewer pageList={project.pageList} />
 				<EditorD w={project.w} h={project.h} page={project.pageList[this.state.curPageIdx]||{}} />
 				<div className='rightcolumn'>
-					<AttributeList2 />
+					<AttributeList2 tagList={project.tagList} />
 					<Layers page={project.pageList[this.state.curPageIdx]||{}} />
 				</div>
 			</div>

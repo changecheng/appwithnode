@@ -4,9 +4,20 @@ var Container2 = require('./Container2');
 var Actions = require('../actions/actions');
 var setTargetStore = require('../stores/setTargetStore');
 var RB = require('react-bootstrap');
+//RB modules
+var SplitButton = RB.SplitButton;
+
+//
 module.exports= React.createClass({
 	getInitialState:function(){
-		return {target:{},elemData:{},oldValue:'',curSubCanvasIdx:0};	
+		return {
+			target:{},
+			elemData:{},
+			oldValue:'',
+			curSubCanvasIdx:0,
+			tagList:this.props.tagList,
+			curSubCanvasName:''
+		};	
 	},
 	handleChange:function(e){
 		//console.log(e);
@@ -41,6 +52,9 @@ module.exports= React.createClass({
 				var subCanvas = elemData.subCanvasList[this.state.curSubCanvasIdx];
 				subCanvas.bgColor = value;
 				break;
+			case 'subCanvasList':
+				this.setState({curSubCanvasName:value});
+				break;
 
 			
 		}
@@ -59,10 +73,66 @@ module.exports= React.createClass({
 		}
 		this.setState({oldValue:value});
 	},
+	handleAddTag:function(tag){
+		var tagList = this.state.tagList;
+		for (var i = 0; i <  tagList.length; i++) {
+			if ( tagList[i] == tag){
+				return;
+			}
+		}
+		tagList.push(tag);
+		this.setState({tagList:tagList});
+		Actions.updateProject({elem:'tagList',value:tagList});
+	},
+	findMax:function(list,key){
+		var i = 0;
+		var j ;
+		if (list.length>1) {
+			for (var k = 0; k < list.length; k++) {
+				if (list[k][key]>=list[i][key]) {
+					i=k;
+				};
+			};
+		}
+		return i;
+	},
+	handleAddSubCanvas:function(sc){
+		var elemData = this.state.elemData;
+		for (var i = 0; i < elemData.subCanvasList.length; i++) {
+			if(elemData.subCanvasList[i].name == sc){
+				return ;
+			}
+		};
+		var newSC = {
+            name: sc,
+            type: "subCanvas",
+            id: "1.0.0",
+            zIndex: 0,
+            bgColor: "white",
+            bgImg: "",
+            widgetList: []
+        }
+        if (elemData.subCanvasList.length) {
+        	var maxSCId = elemData.subCanvasList[this.findMax(elemData.subCanvasList,'id')].id;
+	        var Ids = maxSCId.split('.');
+	        Ids[Ids.length-1] = parseInt(Ids[Ids.length-1]) + 1;
+	        newSC.id = Ids.join('.');
+        }else{
+        	newSC.id = elemData.id + '.0';
+        }
+        
+		elemData.subCanvasList.push(newSC);
+		this.setState({elemData:elemData});
+	},
 	handleKeyPress:function(e){
 		if (e.keyCode == 13) {
 			//enter
 			//trigger update on editor
+			if (e.target.name == 'tag') {
+				this.handleAddTag(e.target.value);
+			}else if (e.target.name == 'subCanvasList'){
+				this.handleAddSubCanvas(e.target.value);
+			}
 			console.log('trigger');
 			Actions.changeAttr(this.state.target,this.state.elemData);
 			this.setState({oldValue:''});
@@ -70,8 +140,9 @@ module.exports= React.createClass({
 	},
 	handleBlur:function(e){
 		var oldValue = this.state.oldValue;
+		var name = e.target.name;
 		if (oldValue!='') {
-			var name = e.target.name;
+			
 			if (name=='scName'||name=='scBgImg'||name=='scBgColor') {
 				var subCanvas = this.state.elemData.subCanvasList[this.state.curSubCanvasIdx];
 				switch (name){
@@ -84,9 +155,14 @@ module.exports= React.createClass({
 					case 'scBgColor':
 						subCanvas.bgColor = oldValue;
 						break;
+
 				}
 				this.setState({subCanvas:subCanvas});
 			}else{
+				if (name=='subCanvasList') {
+					this.refs['subCanvasList'].value = oldValue;
+					return;
+				}
 				var elemData = this.state.elemData;
 				elemData[e.target.name] = oldValue;
 				this.setState({elemData:elemData});
@@ -98,8 +174,49 @@ module.exports= React.createClass({
 		console.log(data);
 		this.setState({target:data.target, elemData:data.data});	
 	},
+	handleListLineClick:function(target,i){
+		switch (target){
+			case 'tag':
+			var elemData = this.state.elemData;
+			elemData.tag = this.state.tagList[i];
+			this.setState({elemData:elemData});
+			Actions.changeAttr(this.state.target,this.state.elemData);
+			break;
+			case 'subCanvasList':
+			var elemData = this.state.elemData;
+			elemData.curSubCanvasIdx = i;
+			this.setState({curSubCanvasIdx:i,elemData:elemData,curSubCanvasName:elemData.subCanvasList[elemData.curSubCanvasIdx].name});
+			Actions.changeAttr(this.state.target,this.state.elemData);
+			break;
+		}
+	},
+	handleListButtonClick:function(target,i){
+		switch (target){
+			case 'tag':
+			var tagList = this.state.tagList;
+			tagList.splice(i,1);
+			this.setState({tagList:tagList});
+			Actions.updateProject({elem:'tagList',value:tagList});
+			break;
+			case 'subCanvasList':
+			var subCanvasList = this.state.elemData.subCanvasList;
+			subCanvasList.splice(i,1);
+			if (subCanvasList.length==0) {
+				this.handleAddSubCanvas('defaultsc');
+			};
+			if (this.state.curSubCanvasIdx == i) {
+				this.setState({curSubCanvasIdx:0});
+			}
+			this.setState({subCanvasList:subCanvasList});
+			Actions.changeAttr(this.state.target,this.state.elemData);
+			break;
+		}
+	},
 	componentDidMount:function(){
 		this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
+	},
+	componentWillReceiveProps:function(newProps){
+		this.setState({tagList:newProps.tagList});
 	},
 	componentWillUnmount:function(){
 		this.us_setTarget();
@@ -119,6 +236,12 @@ module.exports= React.createClass({
 		if (curSubCanvas.id) {
 			subCanvasGroup = (
 				<AttributeGroup groupTitle='SubCanvas'>
+					<AttributeLine>
+					<AttributeLabel name='SubCanvasList' /><AttributeDropDown name='subCanvasList' ref='subCanvasList' value={this.state.curSubCanvasName} items={subCanvasList.map(function (sc) {
+						return sc.name;
+					})||[]} handleListLineClick={this.handleListLineClick.bind(this,'subCanvasList')} handleListButtonClick={this.handleListButtonClick.bind(this,'subCanvasList')} buttonLabel='x' />
+					</AttributeLine>
+				
 					<AttributeLine>
 						<AttributeLabel name='Name' /><AttributeInput name='scName' ref='scName' value ={curSubCanvas.name||''} />
 					</AttributeLine>
@@ -157,6 +280,7 @@ module.exports= React.createClass({
 				<AttributeGroup groupTitle='Background'>
 					<AttributeLine>
 					<AttributeLabel name='Background Image' /><AttributeInput name='bgImg' ref='bgImg' value={this.state.elemData.bgImg||''} /> 
+					
 					</AttributeLine>
 					<AttributeLine>
 					<AttributeLabel name='Background Color' /><AttributeInput name='bgColor' ref='bgColor' value={this.state.elemData.bgColor||''} /> 
@@ -164,7 +288,7 @@ module.exports= React.createClass({
 				</AttributeGroup>
 				<AttributeGroup groupTitle='Tag'>
 					<AttributeLine>
-					<AttributeLabel name='Tags' /><AttributeDropDown name='tag' ref='tag' value={this.state.elemData.tagList||''} items={['tag1','tag2']} />
+					<AttributeLabel name='Tags' /><AttributeDropDown name='tag' ref='tag' value={this.state.elemData.tag||''} items={this.state.tagList||[]} handleListLineClick={this.handleListLineClick.bind(this,'tag')} handleListButtonClick={this.handleListButtonClick.bind(this,'tag')} buttonLabel='x' />
 					</AttributeLine>
 				</AttributeGroup>
 				{subCanvasGroup}
@@ -219,22 +343,28 @@ var AttributeDropDown = React.createClass({
 		return {hidden:false};	
 	},
 	handleClick:function(e){
-		console.log(this.refs.list);
+		//console.log(this.refs.list);
 		this.setState({hidden:!this.state.hidden});
+	},
+	handleListLineClick:function(i){
+		this.props.handleListLineClick(i);
+	},
+	handleListButtonClick:function(i){
+		this.props.handleListButtonClick(i);
 	},
 	render:function(){
 		var listitems = this.props.items;
 
 		return (
 			<div className='attribute-dropdown'>
-			<input className='attribute-dropdown-input' name={this.props.name} ref={this.props.ref} type={this.props.type||'text'} value={this.props.value} />
+			<input className='attribute-dropdown-input' name={this.props.name} ref={this.props.ref} type={this.props.type||'text'} value={this.props.value||''} />
 			<button className='attribute-dropdown-botton' onClick={this.handleClick} >List</button>
 			<ul ref='list'  className='attribute-dropdown-list' hidden={this.state.hidden} >
 				{listitems.map(function(item,i){
 					return <li key={i} className='attribute-dropdown-listline'>
-							{item}
+							<div className='attribute-dropdown-listline-item' onClick={this.handleListLineClick.bind(this,i)}>{item}</div><button className='attribute-dropdown-listline-button' onClick={this.handleListButtonClick.bind(this,i)}>{this.props.buttonLabel||''}</button>
 						</li>;
-				})}
+				}.bind(this))}
 			</ul>
 			</div>
 		);

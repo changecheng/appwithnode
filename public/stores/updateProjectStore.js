@@ -4,7 +4,8 @@ module.exports = Reflux.createStore({
 	init:function(){
 		this.listenTo(Actions.updateProject,this.onUpdateProject);
 	},
-	onUpdateProject:function(page){
-		this.trigger(page);
+	onUpdateProject:function(projectElem){
+		//projectElem: {elem:'page/tagList',value:''}
+		this.trigger(projectElem);
 	}
 });

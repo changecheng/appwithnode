@@ -19672,7 +19672,8 @@
 					author: "xx",
 					w: 800,
 					h: 600,
-					pageList: []
+					pageList: [],
+					tagList: []
 				},
 				curPageIdx: 0
 			};
@@ -19760,10 +19761,19 @@
 			console.log(this.state.project.pageList);
 			//Actions.updatePageViewer(pageList);
 		},
-		handleUpdateProject: function (page) {
-			var pageList = this.state.project.pageList;
-			pageList[this.state.curPageIdx] = page;
-			this.setState({ pageList: pageList });
+		handleUpdateProject: function (projectElem) {
+			switch (projectElem.elem) {
+				case 'page':
+					var pageList = this.state.project.pageList;
+					pageList[this.state.curPageIdx] = projectElem.value;
+					this.setState({ pageList: pageList });
+					break;
+				case 'tagList':
+					var project = this.state.project;
+					project.tagList = projectElem.value;
+					this.setState({ project: project });
+					break;
+			}
 		},
 		handleSaveData: function () {
 			//var url = 'file:///Volumes/Macintosh%20HD/Work/html/appwithnode/public/data/pageData_save.json';
@@ -19807,7 +19817,7 @@
 				React.createElement(
 					'div',
 					{ className: 'rightcolumn' },
-					React.createElement(AttributeList2, null),
+					React.createElement(AttributeList2, { tagList: project.tagList }),
 					React.createElement(Layers, { page: project.pageList[this.state.curPageIdx] || {} })
 				)
 			);
@@ -19855,7 +19865,7 @@
 		},
 		handleClick: function (e) {
 			//console.log(e.target.dataset);
-			var clickedDom = {};
+			var clickedDom = { type: '', id: '' };
 			// var chosen = this.state.chosen;
 			switch (e.target.dataset.type) {
 				case 'subcanvas':
@@ -19928,7 +19938,7 @@
 		// },
 		handleChangeAttr: function (target, data) {
 			this.findTargetData('set', target, data);
-			Actions.updateProject(this.state.page);
+			Actions.updateProject({ elem: 'page', value: this.state.page });
 		},
 		// handleSaveData:function(){
 		// 	//var url = 'file:///Volumes/Macintosh%20HD/Work/html/appwithnode/public/data/pageData_save.json';
@@ -19960,11 +19970,35 @@
 			}
 			return i;
 		},
+		findIdx: function (list, key, value) {
+			if (list.length) {
+				for (var i = 0; i < list.length; i++) {
+					if (list[i][key] == value) {
+						return i;
+					}
+				};
+			} else {
+				return 0;
+			}
+			return 0;
+		},
 		findCurActiveSubCanvas: function () {
+			var chosen = this.state.chosen;
 			var page = this.state.page;
-			var canvasIdx = this.findMax(page.canvasList, 'zIndex');
-			var subCanvasIdx = this.findMax(page.canvasList[canvasIdx].subCanvasList, 'zIndex');
-			return { canvas: canvasIdx, subCanvas: subCanvasIdx };
+			if (chosen.length == 0) {
+				var canvasIdx = this.findMax(page.canvasList, 'zIndex');
+				var subCanvasIdx = this.findMax(page.canvasList[canvasIdx].subCanvasList, 'zIndex');
+				return { canvas: canvasIdx, subCanvas: subCanvasIdx };
+			} else {
+				//if canvas activated
+				var chosenDom = chosen[0];
+				if (chosenDom.type == 'widget') {
+					var Ids = chosenDom.id.split('.');
+					chosenDom.id = Ids[0] + '.' + Ids[1];
+				};
+				var canvasIdx = this.findIdx(page.canvasList, 'id', chosenDom.id);
+				return { canvas: canvasIdx, subCanvas: page.canvasList[canvasIdx].curSubCanvasIdx };
+			}
 		},
 		handleAddElement: function (widget) {
 			var page = this.state.page;
@@ -19987,6 +20021,7 @@
 						tagList: []
 					};
 					var curActiveSubCanvasIdx = this.findCurActiveSubCanvas();
+
 					var curActiveSubCanvas = page.canvasList[curActiveSubCanvasIdx.canvas].subCanvasList[curActiveSubCanvasIdx.subCanvas];
 					var scId = curActiveSubCanvas.id;
 					if (curActiveSubCanvas.widgetList.length) {
@@ -20039,7 +20074,7 @@
 					break;
 			}
 			this.setState({ page: page });
-			Actions.updateProject(this.state.page);
+			Actions.updateProject({ elem: 'page', value: this.state.page });
 		},
 		// handleChangePage:function(index){
 		// 	//console.log(index);
@@ -20090,7 +20125,7 @@
 			var id = e.target.dataset.id;
 			var chosen = this.state.chosen;
 			var lastMousePoint = this.state.lastMousePoint;
-			var clickedDom;
+			var clickedDom = { type: '', id: '' };
 			this.setState({ lastMousePoint: { x: e.pageX, y: e.pageY } });
 			switch (type) {
 				case 'page':
@@ -20257,14 +20292,14 @@
 			//console.log(this.state.draggingElems == this.state.chosen);
 			if (this.state.dragging) {
 				//trigger update
-				Actions.updateProject(this.state.page);
+				Actions.updateProject({ elem: 'page', value: this.state.page });
 			};
 			this.setState({ dragging: false, draggingElems: [] });
 		},
 		handleMouseOut: function (e) {
 			if (this.state.dragging) {
 				//trigger update
-				Actions.updateProject(this.state.page);
+				Actions.updateProject({ elem: 'page', value: this.state.page });
 			};
 			this.setState({ dragging: false, draggingElems: [] });
 		},
@@ -20280,7 +20315,7 @@
 						for (var i = 0; i < chosen.length; i++) {
 							this.deleteTargetData(chosen[i]);
 						}
-						Actions.updateProject(this.state.page);
+						Actions.updateProject({ elem: 'page', value: this.state.page });
 
 						break;
 				}
@@ -20468,7 +20503,7 @@
 				left: this.props.x,
 				top: this.props.y,
 				backgroundColor: this.props.bgColor,
-				backgroundImage: this.props.bgImg ? 'url(' + this.props.bgImg + ')' : '',
+				backgroundImage: this.props.bgImg ? 'url(./public/media/images/' + this.props.bgImg + ')' : 'none',
 				backgroundRepeat: 'no-repeat',
 				overflow: this.props.overflow || 'hidden'
 			};
@@ -20519,7 +20554,13 @@
 
 		render: function () {
 			var content = this.props.content;
-			var subCanvasList = (content.subCanvasList || []).map(function (sc, i) {
+			// var subCanvasList = (content.subCanvasList||[]).map(function(sc,i){
+			// 	return (
+			// 		<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
+			// 	);
+			// });
+			var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx];
+			var subCanvasList = [curSubCanvas].map(function (sc, i) {
 				return React.createElement(SubCanvas, { key: i, content: sc, w: content.w, h: content.h, x: content.x, y: content.y });
 			});
 			return React.createElement(
@@ -22221,11 +22262,22 @@
 	var Actions = __webpack_require__(171);
 	var setTargetStore = __webpack_require__(191);
 	var RB = __webpack_require__(196);
+	//RB modules
+	var SplitButton = RB.SplitButton;
+
+	//
 	module.exports = React.createClass({
 		displayName: 'exports',
 
 		getInitialState: function () {
-			return { target: {}, elemData: {}, oldValue: '', curSubCanvasIdx: 0 };
+			return {
+				target: {},
+				elemData: {},
+				oldValue: '',
+				curSubCanvasIdx: 0,
+				tagList: this.props.tagList,
+				curSubCanvasName: ''
+			};
 		},
 		handleChange: function (e) {
 			//console.log(e);
@@ -22260,6 +22312,9 @@
 					var subCanvas = elemData.subCanvasList[this.state.curSubCanvasIdx];
 					subCanvas.bgColor = value;
 					break;
+				case 'subCanvasList':
+					this.setState({ curSubCanvasName: value });
+					break;
 
 			}
 			this.setState({ elemData: elemData });
@@ -22276,10 +22331,66 @@
 			}
 			this.setState({ oldValue: value });
 		},
+		handleAddTag: function (tag) {
+			var tagList = this.state.tagList;
+			for (var i = 0; i < tagList.length; i++) {
+				if (tagList[i] == tag) {
+					return;
+				}
+			}
+			tagList.push(tag);
+			this.setState({ tagList: tagList });
+			Actions.updateProject({ elem: 'tagList', value: tagList });
+		},
+		findMax: function (list, key) {
+			var i = 0;
+			var j;
+			if (list.length > 1) {
+				for (var k = 0; k < list.length; k++) {
+					if (list[k][key] >= list[i][key]) {
+						i = k;
+					};
+				};
+			}
+			return i;
+		},
+		handleAddSubCanvas: function (sc) {
+			var elemData = this.state.elemData;
+			for (var i = 0; i < elemData.subCanvasList.length; i++) {
+				if (elemData.subCanvasList[i].name == sc) {
+					return;
+				}
+			};
+			var newSC = {
+				name: sc,
+				type: "subCanvas",
+				id: "1.0.0",
+				zIndex: 0,
+				bgColor: "white",
+				bgImg: "",
+				widgetList: []
+			};
+			if (elemData.subCanvasList.length) {
+				var maxSCId = elemData.subCanvasList[this.findMax(elemData.subCanvasList, 'id')].id;
+				var Ids = maxSCId.split('.');
+				Ids[Ids.length - 1] = parseInt(Ids[Ids.length - 1]) + 1;
+				newSC.id = Ids.join('.');
+			} else {
+				newSC.id = elemData.id + '.0';
+			}
+
+			elemData.subCanvasList.push(newSC);
+			this.setState({ elemData: elemData });
+		},
 		handleKeyPress: function (e) {
 			if (e.keyCode == 13) {
 				//enter
 				//trigger update on editor
+				if (e.target.name == 'tag') {
+					this.handleAddTag(e.target.value);
+				} else if (e.target.name == 'subCanvasList') {
+					this.handleAddSubCanvas(e.target.value);
+				}
 				console.log('trigger');
 				Actions.changeAttr(this.state.target, this.state.elemData);
 				this.setState({ oldValue: '' });
@@ -22287,8 +22398,9 @@
 		},
 		handleBlur: function (e) {
 			var oldValue = this.state.oldValue;
+			var name = e.target.name;
 			if (oldValue != '') {
-				var name = e.target.name;
+
 				if (name == 'scName' || name == 'scBgImg' || name == 'scBgColor') {
 					var subCanvas = this.state.elemData.subCanvasList[this.state.curSubCanvasIdx];
 					switch (name) {
@@ -22301,9 +22413,14 @@
 						case 'scBgColor':
 							subCanvas.bgColor = oldValue;
 							break;
+
 					}
 					this.setState({ subCanvas: subCanvas });
 				} else {
+					if (name == 'subCanvasList') {
+						this.refs['subCanvasList'].value = oldValue;
+						return;
+					}
 					var elemData = this.state.elemData;
 					elemData[e.target.name] = oldValue;
 					this.setState({ elemData: elemData });
@@ -22314,8 +22431,49 @@
 			console.log(data);
 			this.setState({ target: data.target, elemData: data.data });
 		},
+		handleListLineClick: function (target, i) {
+			switch (target) {
+				case 'tag':
+					var elemData = this.state.elemData;
+					elemData.tag = this.state.tagList[i];
+					this.setState({ elemData: elemData });
+					Actions.changeAttr(this.state.target, this.state.elemData);
+					break;
+				case 'subCanvasList':
+					var elemData = this.state.elemData;
+					elemData.curSubCanvasIdx = i;
+					this.setState({ curSubCanvasIdx: i, elemData: elemData, curSubCanvasName: elemData.subCanvasList[elemData.curSubCanvasIdx].name });
+					Actions.changeAttr(this.state.target, this.state.elemData);
+					break;
+			}
+		},
+		handleListButtonClick: function (target, i) {
+			switch (target) {
+				case 'tag':
+					var tagList = this.state.tagList;
+					tagList.splice(i, 1);
+					this.setState({ tagList: tagList });
+					Actions.updateProject({ elem: 'tagList', value: tagList });
+					break;
+				case 'subCanvasList':
+					var subCanvasList = this.state.elemData.subCanvasList;
+					subCanvasList.splice(i, 1);
+					if (subCanvasList.length == 0) {
+						this.handleAddSubCanvas('defaultsc');
+					};
+					if (this.state.curSubCanvasIdx == i) {
+						this.setState({ curSubCanvasIdx: 0 });
+					}
+					this.setState({ subCanvasList: subCanvasList });
+					Actions.changeAttr(this.state.target, this.state.elemData);
+					break;
+			}
+		},
 		componentDidMount: function () {
 			this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
+		},
+		componentWillReceiveProps: function (newProps) {
+			this.setState({ tagList: newProps.tagList });
 		},
 		componentWillUnmount: function () {
 			this.us_setTarget();
@@ -22335,6 +22493,14 @@
 				subCanvasGroup = React.createElement(
 					AttributeGroup,
 					{ groupTitle: 'SubCanvas' },
+					React.createElement(
+						AttributeLine,
+						null,
+						React.createElement(AttributeLabel, { name: 'SubCanvasList' }),
+						React.createElement(AttributeDropDown, { name: 'subCanvasList', ref: 'subCanvasList', value: this.state.curSubCanvasName, items: subCanvasList.map(function (sc) {
+								return sc.name;
+							}) || [], handleListLineClick: this.handleListLineClick.bind(this, 'subCanvasList'), handleListButtonClick: this.handleListButtonClick.bind(this, 'subCanvasList'), buttonLabel: 'x' })
+					),
 					React.createElement(
 						AttributeLine,
 						null,
@@ -22421,7 +22587,7 @@
 						AttributeLine,
 						null,
 						React.createElement(AttributeLabel, { name: 'Tags' }),
-						React.createElement(AttributeDropDown, { name: 'tag', ref: 'tag', value: this.state.elemData.tagList || '', items: ['tag1', 'tag2'] })
+						React.createElement(AttributeDropDown, { name: 'tag', ref: 'tag', value: this.state.elemData.tag || '', items: this.state.tagList || [], handleListLineClick: this.handleListLineClick.bind(this, 'tag'), handleListButtonClick: this.handleListButtonClick.bind(this, 'tag'), buttonLabel: 'x' })
 					)
 				),
 				subCanvasGroup
@@ -22485,8 +22651,14 @@
 			return { hidden: false };
 		},
 		handleClick: function (e) {
-			console.log(this.refs.list);
+			//console.log(this.refs.list);
 			this.setState({ hidden: !this.state.hidden });
+		},
+		handleListLineClick: function (i) {
+			this.props.handleListLineClick(i);
+		},
+		handleListButtonClick: function (i) {
+			this.props.handleListButtonClick(i);
 		},
 		render: function () {
 			var listitems = this.props.items;
@@ -22494,7 +22666,7 @@
 			return React.createElement(
 				'div',
 				{ className: 'attribute-dropdown' },
-				React.createElement('input', { className: 'attribute-dropdown-input', name: this.props.name, ref: this.props.ref, type: this.props.type || 'text', value: this.props.value }),
+				React.createElement('input', { className: 'attribute-dropdown-input', name: this.props.name, ref: this.props.ref, type: this.props.type || 'text', value: this.props.value || '' }),
 				React.createElement(
 					'button',
 					{ className: 'attribute-dropdown-botton', onClick: this.handleClick },
@@ -22503,13 +22675,22 @@
 				React.createElement(
 					'ul',
 					{ ref: 'list', className: 'attribute-dropdown-list', hidden: this.state.hidden },
-					listitems.map(function (item, i) {
+					listitems.map((function (item, i) {
 						return React.createElement(
 							'li',
 							{ key: i, className: 'attribute-dropdown-listline' },
-							item
+							React.createElement(
+								'div',
+								{ className: 'attribute-dropdown-listline-item', onClick: this.handleListLineClick.bind(this, i) },
+								item
+							),
+							React.createElement(
+								'button',
+								{ className: 'attribute-dropdown-listline-button', onClick: this.handleListButtonClick.bind(this, i) },
+								this.props.buttonLabel || ''
+							)
 						);
-					})
+					}).bind(this))
 				)
 			);
 		}
@@ -48855,8 +49036,9 @@
 		init: function () {
 			this.listenTo(Actions.updateProject, this.onUpdateProject);
 		},
-		onUpdateProject: function (page) {
-			this.trigger(page);
+		onUpdateProject: function (projectElem) {
+			//projectElem: {elem:'page/tagList',value:''}
+			this.trigger(projectElem);
 		}
 	});
 

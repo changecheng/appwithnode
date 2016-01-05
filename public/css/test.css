@@ -39,6 +39,7 @@
 	/*border:1px solid gray;*/
 	height: 65%;
 	overflow: scroll;
+	
 }
 
 .tools{
@@ -70,4 +71,16 @@ ul{
 	list-style-type: none;
 	/*margin: 0;
 	padding: 0;*/
+}
+.attribute-dropdown-list{
+	padding: 1em;
+}
+.attribute-dropdown-listline{
+	margin: 0;
+	padding: 0;
+}
+.attribute-dropdown-listline-item{
+	display: inline-block;
+	width: 60%;
+
 }

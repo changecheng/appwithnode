@@ -34,7 +34,7 @@ module.exports= React.createClass({
 	},
 	handleClick:function(e){
 		//console.log(e.target.dataset);
-		var clickedDom = {};
+		var clickedDom = {type:'',id:''};
 		// var chosen = this.state.chosen;
 		switch (e.target.dataset.type){
 			case 'subcanvas':
@@ -107,7 +107,7 @@ module.exports= React.createClass({
 	// },
 	handleChangeAttr:function(target,data){
 		this.findTargetData('set',target,data);
-		Actions.updateProject(this.state.page);
+		Actions.updateProject({elem:'page',value:this.state.page});
 	},
 	// handleSaveData:function(){
 	// 	//var url = 'file:///Volumes/Macintosh%20HD/Work/html/appwithnode/public/data/pageData_save.json';
@@ -139,11 +139,37 @@ module.exports= React.createClass({
 		}
 		return i;
 	},
+	findIdx:function(list,key,value){
+		if (list.length) {
+			for (var i = 0; i < list.length; i++) {
+				if (list[i][key] == value){
+					return i;
+				}
+			};
+		}else{
+			return 0;
+		}
+		return 0;
+	},
 	findCurActiveSubCanvas:function(){
+		var chosen = this.state.chosen;
 		var page = this.state.page;
-		var canvasIdx = this.findMax(page.canvasList,'zIndex');
-		var subCanvasIdx = this.findMax(page.canvasList[canvasIdx].subCanvasList,'zIndex');
-		return {canvas:canvasIdx,subCanvas:subCanvasIdx};
+		if (chosen.length==0) {
+			var canvasIdx = this.findMax(page.canvasList,'zIndex');
+			var subCanvasIdx = this.findMax(page.canvasList[canvasIdx].subCanvasList,'zIndex');
+			return {canvas:canvasIdx,subCanvas:subCanvasIdx};
+		}else{
+			//if canvas activated
+			var chosenDom = chosen[0];
+			if (chosenDom.type == 'widget') {
+				var Ids = chosenDom.id.split('.');
+				chosenDom.id = Ids[0]+'.'+Ids[1];
+			};
+			var canvasIdx = this.findIdx(page.canvasList,'id',chosenDom.id)
+			return {canvas:canvasIdx,subCanvas:page.canvasList[canvasIdx].curSubCanvasIdx};
+		}
+		
+		
 	},
 	handleAddElement:function(widget){
 		var page = this.state.page;
@@ -166,6 +192,7 @@ module.exports= React.createClass({
 				tagList:[]
 			}
 			var curActiveSubCanvasIdx = this.findCurActiveSubCanvas();
+
 			var curActiveSubCanvas=page.canvasList[curActiveSubCanvasIdx.canvas].subCanvasList[curActiveSubCanvasIdx.subCanvas];
 			var scId = curActiveSubCanvas.id;
 			if(curActiveSubCanvas.widgetList.length){
@@ -221,7 +248,7 @@ module.exports= React.createClass({
 			break;
 		}
 		this.setState({page:page});
-		Actions.updateProject(this.state.page);
+		Actions.updateProject({elem:'page',value:this.state.page});
 	},
 	// handleChangePage:function(index){
 	// 	//console.log(index);
@@ -272,7 +299,7 @@ module.exports= React.createClass({
 		var id = e.target.dataset.id;
 		var chosen = this.state.chosen;
 		var lastMousePoint = this.state.lastMousePoint;
-		var clickedDom;
+		var clickedDom={type:'',id:''};
 		this.setState({lastMousePoint:{x:e.pageX,y:e.pageY}});
 		switch (type){
 			case 'page':
@@ -441,14 +468,14 @@ module.exports= React.createClass({
 		//console.log(this.state.draggingElems == this.state.chosen);
 		if (this.state.dragging) {
 			//trigger update
-			Actions.updateProject(this.state.page);
+			Actions.updateProject({elem:'page',value:this.state.page});
 		};
 		this.setState({dragging:false,draggingElems:[]});
 	},
 	handleMouseOut:function(e){
 		if (this.state.dragging) {
 			//trigger update
-			Actions.updateProject(this.state.page);
+			Actions.updateProject({elem:'page',value:this.state.page});
 		};
 		this.setState({dragging:false,draggingElems:[]});
 	},
@@ -464,7 +491,7 @@ module.exports= React.createClass({
 					for (var i = 0;i< chosen.length;i++){
 						this.deleteTargetData(chosen[i]);
 					}
-					Actions.updateProject(this.state.page);
+					Actions.updateProject({elem:'page',value:this.state.page});
 					
 				break;
 			}

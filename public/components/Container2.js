@@ -12,7 +12,7 @@ module.exports= React.createClass({
 			left:this.props.x,
 			top:this.props.y,
 			backgroundColor:this.props.bgColor,
-			backgroundImage:this.props.bgImg?'url('+this.props.bgImg+')':'',
+			backgroundImage:this.props.bgImg?'url(./public/media/images/'+this.props.bgImg+')':'none',
 			backgroundRepeat:'no-repeat',
 			overflow:this.props.overflow||'hidden'
 		};

@@ -38,7 +38,7 @@
 							"currentSlice":0,
 							"texList":[],
 							"triggerList":[],
-							"tagList":[]
+							"tag":"tag1"
 
 						}
 					]
@@ -61,17 +61,17 @@
 							"currentSlice":0,
 							"texList":[],
 							"triggerList":[],
-							"tagList":[]
+							"tag":"tag1"
 
 						}
 					]
 				}
 			],
 			"canvasActionList":[],
-			"tagList":[]
+			"tag":"tag2"
 
 		}
 	],
 	"pageActionList":[],
-	"tagList":["tag1","tag2"]
+	"tag":"tag3"
 }

@@ -6,7 +6,13 @@ module.exports= React.createClass({
 	
 	render:function(){
 		var content = this.props.content;
-		var subCanvasList = (content.subCanvasList||[]).map(function(sc,i){
+		// var subCanvasList = (content.subCanvasList||[]).map(function(sc,i){
+		// 	return (
+		// 		<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
+		// 	);
+		// });
+		var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx];
+		var subCanvasList = [curSubCanvas].map(function(sc,i){
 			return (
 				<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
 			);
