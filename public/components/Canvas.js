@@ -11,14 +11,14 @@ module.exports= React.createClass({
 		// 		<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
 		// 	);
 		// });
-		var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx];
+		var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx]||{};
 		var subCanvasList = [curSubCanvas].map(function(sc,i){
 			return (
 				<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
 			);
 		});
 		return (
-			<Container2 className='canvas' title={content.name||'canvas'} name={content.name} id={content.id} type='canvas' w={content.w||400} h={content.h||200} x={content.x||0} y={content.y||0}  >
+			<Container2 className='canvas' title={content.name||'canvas'} name={content.name} id={content.id} type='canvas' w={content.w||400} h={content.h||200} x={content.x||0} y={content.y||0} bgImg={content.bgImg} bgColor={content.bgColor} >
 				{subCanvasList}
 			</Container2>
 		);

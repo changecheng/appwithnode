@@ -5,6 +5,7 @@ var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
 var app = express();
+var formidable = require('formidable');
 
 var LOAD_FILE = path.join(__dirname, '/public/data/pageData.json');
 var SAVE_FILE = path.join(__dirname, '/public/data/pageData_save.json');
@@ -46,7 +47,7 @@ app.post('/api/project', function(req, res) {
       console.error(err);
       process.exit(1);
     }
-    console.log("req");
+    //console.log("req");
     var dataJson = JSON.parse(req.body.data);
 
     fs.writeFile(LOAD_FILE_PROJECT, JSON.stringify(dataJson,null,4), function(err) {
@@ -81,6 +82,46 @@ app.post('/api/page', function(req, res) {
   });
 });
 
+app.post('/api/upload', function(req, res) {
+  // console.log(req.body);
+  // console.log('readFile '+SAVE_FILE);
+  var form = new formidable.IncomingForm();
+  var file = {};
+  var post = {};
+  uploadDir = path.join(__dirname,'/public/media/images')
+  form.uploadDir = uploadDir;
+  form
+    .on('error',function(err){
+      console.log(err);
+    })
+    .on('field',function(field,value){
+      if (form.type=='multipart'){
+        if (field in post) {
+          if (util.isArray(post[field])===false) {
+            post[field] = [post[field]];
+          };
+          post[field].push(value);
+          return;
+        };
+      }
+      post[field] = value;
+    })
+    .on('file',function(field,lfile){
+      // console.log(field);
+      // console.log(file);
+      //console.log(file);
+      file[field] = lfile;
+      
+      fs.rename(lfile.path,uploadDir+'/'+lfile.name);
+    })
+    .on('end',function(){
+      
+      
+    })
+  form.parse(req);
+  
+  res.end('uploaded');
+});
 
 app.listen(app.get('port'), function() {
   console.log('Server started: http://localhost:' + app.get('port') + '/');

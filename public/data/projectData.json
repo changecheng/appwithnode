@@ -3,9 +3,10 @@
     "author": "zzen1ss",
     "w": 800,
     "h": 600,
-    "images":[
+    "images": [
         "saber.png",
-        "moon.jpg"
+        "moon.jpg",
+        "311784096_o.jpg"
     ],
     "tagList": [
         "tag1",
@@ -19,7 +20,7 @@
             "id": "0",
             "w": 800,
             "h": 600,
-            "bgImg": "saber.png",
+            "bgImg": "311784096_o.jpg",
             "bgColor": "red",
             "canvasList": [
                 {
@@ -28,8 +29,10 @@
                     "id": "0.0",
                     "w": 400,
                     "h": 400,
-                    "x": 169,
-                    "y": 82,
+                    "x": 256,
+                    "y": 158,
+                    "bgImg":"moon.jpg",
+                    "bgColor":"",
                     "zIndex": 0,
                     "curSubCanvasIdx": 2,
                     "subCanvasList": [
@@ -221,6 +224,8 @@
                     "x": 50,
                     "y": 50,
                     "zIndex": 0,
+                    "bgImg":"moon.jpg",
+                    "bgColor":"",
                     "curSubCanvasIdx": 0,
                     "subCanvasList": [
                         {

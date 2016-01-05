@@ -19653,10 +19653,10 @@
 
 	var EditorD = __webpack_require__(160);
 	var AttributeList2 = __webpack_require__(195);
-	var Tools = __webpack_require__(440);
+	var Tools = __webpack_require__(441);
 	var Layers = __webpack_require__(169);
-	var PageViewer = __webpack_require__(443);
-	var $ = __webpack_require__(445);
+	var PageViewer = __webpack_require__(444);
+	var $ = __webpack_require__(440);
 	var Actions = __webpack_require__(171);
 	var changePageStore = __webpack_require__(194);
 	var addNewPageStore = __webpack_require__(446);
@@ -19673,7 +19673,8 @@
 					w: 800,
 					h: 600,
 					pageList: [],
-					tagList: []
+					tagList: [],
+					images: []
 				},
 				curPageIdx: 0
 			};
@@ -19773,6 +19774,10 @@
 					project.tagList = projectElem.value;
 					this.setState({ project: project });
 					break;
+				case 'imageList':
+					var images = this.state.project.images;
+					this.setState({ images: projectElem.value });
+					break;
 			}
 		},
 		handleSaveData: function () {
@@ -19817,7 +19822,7 @@
 				React.createElement(
 					'div',
 					{ className: 'rightcolumn' },
-					React.createElement(AttributeList2, { tagList: project.tagList }),
+					React.createElement(AttributeList2, { tagList: project.tagList, imageList: project.images }),
 					React.createElement(Layers, { page: project.pageList[this.state.curPageIdx] || {} })
 				)
 			);
@@ -20050,6 +20055,7 @@
 						x: 50,
 						y: 50,
 						zIndex: 0,
+						curSubCanvasIdx: 0,
 						subCanvasList: [{
 							name: "defaultSC",
 							type: "subCanvas",
@@ -20071,10 +20077,12 @@
 					}
 					defaultCanvas.subCanvasList[0].id = defaultCanvas.id + ".0";
 					page.canvasList.push(defaultCanvas);
+					console.log(defaultCanvas);
+					console.log(page);
 					break;
 			}
 			this.setState({ page: page });
-			Actions.updateProject({ elem: 'page', value: this.state.page });
+			Actions.updateProject({ elem: 'page', value: page });
 		},
 		// handleChangePage:function(index){
 		// 	//console.log(index);
@@ -20559,13 +20567,13 @@
 			// 		<SubCanvas key={i} content={sc} w={content.w} h={content.h} x={content.x} y={content.y}  />
 			// 	);
 			// });
-			var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx];
+			var curSubCanvas = content.subCanvasList[content.curSubCanvasIdx] || {};
 			var subCanvasList = [curSubCanvas].map(function (sc, i) {
 				return React.createElement(SubCanvas, { key: i, content: sc, w: content.w, h: content.h, x: content.x, y: content.y });
 			});
 			return React.createElement(
 				Container2,
-				{ className: 'canvas', title: content.name || 'canvas', name: content.name, id: content.id, type: 'canvas', w: content.w || 400, h: content.h || 200, x: content.x || 0, y: content.y || 0 },
+				{ className: 'canvas', title: content.name || 'canvas', name: content.name, id: content.id, type: 'canvas', w: content.w || 400, h: content.h || 200, x: content.x || 0, y: content.y || 0, bgImg: content.bgImg, bgColor: content.bgColor },
 				subCanvasList
 			);
 		}
@@ -22257,11 +22265,13 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
+	var ReactDOM = __webpack_require__(158);
 	var Container = __webpack_require__(161);
 	var Container2 = __webpack_require__(163);
 	var Actions = __webpack_require__(171);
 	var setTargetStore = __webpack_require__(191);
 	var RB = __webpack_require__(196);
+	var $ = __webpack_require__(440);
 	//RB modules
 	var SplitButton = RB.SplitButton;
 
@@ -22276,7 +22286,8 @@
 				oldValue: '',
 				curSubCanvasIdx: 0,
 				tagList: this.props.tagList,
-				curSubCanvasName: ''
+				curSubCanvasName: '',
+				imageList: this.props.imageList
 			};
 		},
 		handleChange: function (e) {
@@ -22445,6 +22456,12 @@
 					this.setState({ curSubCanvasIdx: i, elemData: elemData, curSubCanvasName: elemData.subCanvasList[elemData.curSubCanvasIdx].name });
 					Actions.changeAttr(this.state.target, this.state.elemData);
 					break;
+				case 'bgImg':
+					var elemData = this.state.elemData;
+					elemData.bgImg = this.state.imageList[i];
+					this.setState({ elemData: elemData });
+					Actions.changeAttr(this.state.target, this.state.elemData);
+					break;
 			}
 		},
 		handleListButtonClick: function (target, i) {
@@ -22461,19 +22478,60 @@
 					if (subCanvasList.length == 0) {
 						this.handleAddSubCanvas('defaultsc');
 					};
-					if (this.state.curSubCanvasIdx == i) {
+					if (this.state.curSubCanvasIdx > i) {
+						this.setState({ curSubCanvasIdx: this.state.curSubCanvasIdx - 1 });
+					} else if (this.state.curSubCanvasIdx == i) {
 						this.setState({ curSubCanvasIdx: 0 });
-					}
+					};
 					this.setState({ subCanvasList: subCanvasList });
 					Actions.changeAttr(this.state.target, this.state.elemData);
 					break;
+				case 'bgImg':
+					var imageList = this.state.imageList;
+					imageList.splice(i, 1);
+					this.setState({ imageList: imageList });
+					Actions.updateProject({ elem: 'imageList', value: imageList });
+					break;
 			}
+		},
+		handleBgImgUpload: function (e) {
+			console.log(e);
+		},
+		handleUpdateImageList: function (filename) {
+			var imageList = this.state.imageList;
+			imageList.push(filename);
+			this.setState({ imageList: imageList });
+			Actions.updateProject({ elem: 'imageList', value: imageList });
+			//set img to current file
+		},
+		handleBgImgUploadComplete: function (e) {
+			console.log(this.refs.file.files[0]);
+			// console.log(this.refs.uploadForm.getDOMNode());
+			//console.log(e);
+			var fd = new FormData();
+			var file = this.refs.file.files[0];
+			fd.append('file', file);
+			console.log(fd);
+			var self = this;
+			$.ajax({
+				url: '/api/upload',
+				data: fd,
+				processData: false,
+				contentType: false,
+				type: 'POST',
+				success: function (data) {
+					console.log(data);
+					console.log('upload ok');
+					self.handleUpdateImageList(file.name);
+				}
+			});
+			e.preventDefault();
 		},
 		componentDidMount: function () {
 			this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
 		},
 		componentWillReceiveProps: function (newProps) {
-			this.setState({ tagList: newProps.tagList });
+			this.setState({ tagList: newProps.tagList, imageList: newProps.imageList });
 		},
 		componentWillUnmount: function () {
 			this.us_setTarget();
@@ -22571,7 +22629,12 @@
 						AttributeLine,
 						null,
 						React.createElement(AttributeLabel, { name: 'Background Image' }),
-						React.createElement(AttributeInput, { name: 'bgImg', ref: 'bgImg', value: this.state.elemData.bgImg || '' })
+						React.createElement(
+							'form',
+							{ ref: 'uploadForm', encType: 'multipart/form-data' },
+							React.createElement('input', { ref: 'file', type: 'file', className: 'bgimg-uploader', onChange: this.handleBgImgUploadComplete })
+						),
+						React.createElement(AttributeDropDown, { name: 'bgImg', ref: 'bgImg', value: this.state.elemData.bgImg || '', items: this.state.imageList || [], handleListLineClick: this.handleListLineClick.bind(this, 'bgImg'), handleListButtonClick: this.handleListButtonClick.bind(this, 'bgImg'), buttonLabel: 'x' })
 					),
 					React.createElement(
 						AttributeLine,
@@ -39646,159 +39709,6 @@
 /* 440 */
 /***/ function(module, exports, __webpack_require__) {
 
-	var React = __webpack_require__(1);
-	var AddWidgetButton = __webpack_require__(441);
-	var SaveDataButton = __webpack_require__(442);
-	module.exports = React.createClass({
-		displayName: 'exports',
-
-		render: function () {
-			return React.createElement(
-				'div',
-				{ className: 'tools' },
-				React.createElement(AddWidgetButton, { name: 'Button', widget: 'button' }),
-				React.createElement(AddWidgetButton, { name: 'Canvas', widget: 'canvas' }),
-				React.createElement(SaveDataButton, null)
-			);
-		}
-	});
-
-/***/ },
-/* 441 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-	var Actions = __webpack_require__(171);
-
-	module.exports = React.createClass({
-		displayName: 'exports',
-
-		handleClick: function (e) {
-			e.preventDefault();
-			Actions.addElement(this.props.widget || 'button');
-		},
-		render: function () {
-			return React.createElement(
-				'button',
-				{ className: 'toolbox-button', onClick: this.handleClick },
-				this.props.name || 'Add'
-			);
-		}
-	});
-
-/***/ },
-/* 442 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-	var Actions = __webpack_require__(171);
-
-	module.exports = React.createClass({
-		displayName: 'exports',
-
-		handleClick: function (e) {
-			e.preventDefault();
-			Actions.saveData();
-		},
-		render: function () {
-			return React.createElement(
-				'button',
-				{ className: 'toolbox-button', onClick: this.handleClick },
-				'Save Data'
-			);
-		}
-	});
-
-/***/ },
-/* 443 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var React = __webpack_require__(1);
-	var Actions = __webpack_require__(171);
-	var changePageStore = __webpack_require__(194);
-	var updatePageViewerStore = __webpack_require__(444);
-	module.exports = React.createClass({
-		displayName: 'exports',
-
-		getInitialState: function () {
-			return { pageList: this.props.pageList || [] };
-		},
-		// handleUpdatePageViewer:function(pageList){
-		// 	this.setState({pageList:pageList});
-		// },
-		componentWillReceiveProps: function (newProps) {
-			//console.log(newProps);
-			this.setState({ pageList: newProps.pageList });
-		},
-		// componentDidMount:function(){
-		// 	this.us_updatePageViewer = updatePageViewerStore.listen(this.handleUpdatePageViewer);	
-		// },
-		// comonentWillUnmount:function(){
-		// 	this.us_updatePageViewer();
-		// },
-		handleAddPage: function () {
-			Actions.addNewPage();
-		},
-		render: function () {
-			return React.createElement(
-				'div',
-				{ className: 'pageViewer' },
-				React.createElement(
-					'button',
-					{ className: 'addNewPage', onClick: this.handleAddPage },
-					'+'
-				),
-				this.state.pageList.map(function (page, i) {
-					return React.createElement(SinglePageViewer, { index: i, page: page, key: i });
-				})
-			);
-		}
-	});
-
-	var SinglePageViewer = React.createClass({
-		displayName: 'SinglePageViewer',
-
-		handleClick: function (e) {
-			//console.log(this.props.index);
-			Actions.changePage(this.props.index);
-		},
-		render: function () {
-			return React.createElement(
-				'div',
-				{ className: 'singlePageViewer', onClick: this.handleClick },
-				React.createElement(
-					'div',
-					{ className: 'listNumber' },
-					this.props.index
-				),
-				React.createElement(
-					'div',
-					{ className: 'pageThumbnail' },
-					React.createElement('img', { className: 'thumbnail', src: '', alt: this.props.index })
-				)
-			);
-		}
-	});
-
-/***/ },
-/* 444 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var Actions = __webpack_require__(171);
-	var Reflux = __webpack_require__(172);
-	module.exports = Reflux.createStore({
-		init: function () {
-			this.listenTo(Actions.updatePageViewer, this.onUpdatePageViewer);
-		},
-		onUpdatePageViewer: function (pageList) {
-			this.trigger(pageList);
-		}
-	});
-
-/***/ },
-/* 445 */
-/***/ function(module, exports, __webpack_require__) {
-
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/*!
 	 * jQuery JavaScript Library v2.1.4
 	 * http://jquery.com/
@@ -49010,6 +48920,159 @@
 
 	}));
 
+
+/***/ },
+/* 441 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var AddWidgetButton = __webpack_require__(442);
+	var SaveDataButton = __webpack_require__(443);
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: 'tools' },
+				React.createElement(AddWidgetButton, { name: 'Button', widget: 'button' }),
+				React.createElement(AddWidgetButton, { name: 'Canvas', widget: 'canvas' }),
+				React.createElement(SaveDataButton, null)
+			);
+		}
+	});
+
+/***/ },
+/* 442 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var Actions = __webpack_require__(171);
+
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		handleClick: function (e) {
+			e.preventDefault();
+			Actions.addElement(this.props.widget || 'button');
+		},
+		render: function () {
+			return React.createElement(
+				'button',
+				{ className: 'toolbox-button', onClick: this.handleClick },
+				this.props.name || 'Add'
+			);
+		}
+	});
+
+/***/ },
+/* 443 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var Actions = __webpack_require__(171);
+
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		handleClick: function (e) {
+			e.preventDefault();
+			Actions.saveData();
+		},
+		render: function () {
+			return React.createElement(
+				'button',
+				{ className: 'toolbox-button', onClick: this.handleClick },
+				'Save Data'
+			);
+		}
+	});
+
+/***/ },
+/* 444 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var Actions = __webpack_require__(171);
+	var changePageStore = __webpack_require__(194);
+	var updatePageViewerStore = __webpack_require__(445);
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		getInitialState: function () {
+			return { pageList: this.props.pageList || [] };
+		},
+		// handleUpdatePageViewer:function(pageList){
+		// 	this.setState({pageList:pageList});
+		// },
+		componentWillReceiveProps: function (newProps) {
+			//console.log(newProps);
+			this.setState({ pageList: newProps.pageList });
+		},
+		// componentDidMount:function(){
+		// 	this.us_updatePageViewer = updatePageViewerStore.listen(this.handleUpdatePageViewer);	
+		// },
+		// comonentWillUnmount:function(){
+		// 	this.us_updatePageViewer();
+		// },
+		handleAddPage: function () {
+			Actions.addNewPage();
+		},
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: 'pageViewer' },
+				React.createElement(
+					'button',
+					{ className: 'addNewPage', onClick: this.handleAddPage },
+					'+'
+				),
+				this.state.pageList.map(function (page, i) {
+					return React.createElement(SinglePageViewer, { index: i, page: page, key: i });
+				})
+			);
+		}
+	});
+
+	var SinglePageViewer = React.createClass({
+		displayName: 'SinglePageViewer',
+
+		handleClick: function (e) {
+			//console.log(this.props.index);
+			Actions.changePage(this.props.index);
+		},
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: 'singlePageViewer', onClick: this.handleClick },
+				React.createElement(
+					'div',
+					{ className: 'listNumber' },
+					this.props.index
+				),
+				React.createElement(
+					'div',
+					{ className: 'pageThumbnail' },
+					React.createElement('img', { className: 'thumbnail', src: '', alt: this.props.index })
+				)
+			);
+		}
+	});
+
+/***/ },
+/* 445 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Actions = __webpack_require__(171);
+	var Reflux = __webpack_require__(172);
+	module.exports = Reflux.createStore({
+		init: function () {
+			this.listenTo(Actions.updatePageViewer, this.onUpdatePageViewer);
+		},
+		onUpdatePageViewer: function (pageList) {
+			this.trigger(pageList);
+		}
+	});
 
 /***/ },
 /* 446 */

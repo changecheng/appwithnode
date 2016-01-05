@@ -221,6 +221,7 @@ module.exports= React.createClass({
 				x:50,
 				y:50,
 				zIndex:0,
+				curSubCanvasIdx:0,
 				subCanvasList:[
 					{
 						name:"defaultSC",
@@ -245,10 +246,12 @@ module.exports= React.createClass({
 			}
 			defaultCanvas.subCanvasList[0].id = defaultCanvas.id+".0";
 			page.canvasList.push(defaultCanvas);
+			console.log(defaultCanvas);
+			console.log(page);
 			break;
 		}
 		this.setState({page:page});
-		Actions.updateProject({elem:'page',value:this.state.page});
+		Actions.updateProject({elem:'page',value:page});
 	},
 	// handleChangePage:function(index){
 	// 	//console.log(index);

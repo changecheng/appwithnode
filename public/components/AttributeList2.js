@@ -1,9 +1,11 @@
 var React = require('react');
+var ReactDOM = require('react-dom');
 var Container = require('./Container');
 var Container2 = require('./Container2');
 var Actions = require('../actions/actions');
 var setTargetStore = require('../stores/setTargetStore');
 var RB = require('react-bootstrap');
+var $ = require('jquery');
 //RB modules
 var SplitButton = RB.SplitButton;
 
@@ -16,7 +18,8 @@ module.exports= React.createClass({
 			oldValue:'',
 			curSubCanvasIdx:0,
 			tagList:this.props.tagList,
-			curSubCanvasName:''
+			curSubCanvasName:'',
+			imageList:this.props.imageList
 		};	
 	},
 	handleChange:function(e){
@@ -188,6 +191,12 @@ module.exports= React.createClass({
 			this.setState({curSubCanvasIdx:i,elemData:elemData,curSubCanvasName:elemData.subCanvasList[elemData.curSubCanvasIdx].name});
 			Actions.changeAttr(this.state.target,this.state.elemData);
 			break;
+			case 'bgImg':
+			var elemData = this.state.elemData;
+			elemData.bgImg = this.state.imageList[i];
+			this.setState({elemData:elemData});
+			Actions.changeAttr(this.state.target,this.state.elemData);
+			break;
 		}
 	},
 	handleListButtonClick:function(target,i){
@@ -204,19 +213,61 @@ module.exports= React.createClass({
 			if (subCanvasList.length==0) {
 				this.handleAddSubCanvas('defaultsc');
 			};
-			if (this.state.curSubCanvasIdx == i) {
+			if (this.state.curSubCanvasIdx > i) {
+				this.setState({curSubCanvasIdx:this.state.curSubCanvasIdx-1});
+			}else if (this.state.curSubCanvasIdx == i) {
 				this.setState({curSubCanvasIdx:0});
-			}
+			};
 			this.setState({subCanvasList:subCanvasList});
 			Actions.changeAttr(this.state.target,this.state.elemData);
 			break;
+			case 'bgImg':
+			var imageList = this.state.imageList;
+			imageList.splice(i,1);
+			this.setState({imageList:imageList});
+			Actions.updateProject({elem:'imageList',value:imageList});
+			break;
 		}
+	},
+	handleBgImgUpload:function(e){
+		console.log(e);
+	},
+	handleUpdateImageList:function(filename){
+		var imageList = this.state.imageList;
+		imageList.push(filename);
+		this.setState({imageList:imageList});
+		Actions.updateProject({elem:'imageList',value:imageList});
+		//set img to current file
+
+	},
+	handleBgImgUploadComplete:function(e){
+		console.log(this.refs.file.files[0]);
+		// console.log(this.refs.uploadForm.getDOMNode());
+		//console.log(e);
+		var fd = new FormData();    
+		var file = this.refs.file.files[0]
+	    fd.append('file',file);
+	    console.log(fd);
+	    var self = this;
+	    $.ajax({
+	        url: '/api/upload',
+	        data: fd,
+	        processData: false,
+	        contentType: false,
+	        type: 'POST',
+	        success: function(data){
+	            console.log(data);
+	            console.log('upload ok');
+	            self.handleUpdateImageList(file.name);
+	        }
+	    });
+	    e.preventDefault();
 	},
 	componentDidMount:function(){
 		this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
 	},
 	componentWillReceiveProps:function(newProps){
-		this.setState({tagList:newProps.tagList});
+		this.setState({tagList:newProps.tagList,imageList:newProps.imageList});
 	},
 	componentWillUnmount:function(){
 		this.us_setTarget();
@@ -279,8 +330,12 @@ module.exports= React.createClass({
 				</AttributeGroup>
 				<AttributeGroup groupTitle='Background'>
 					<AttributeLine>
-					<AttributeLabel name='Background Image' /><AttributeInput name='bgImg' ref='bgImg' value={this.state.elemData.bgImg||''} /> 
-					
+					<AttributeLabel name='Background Image' />
+					<form ref='uploadForm' encType='multipart/form-data'  >
+					<input ref='file' type="file" className='bgimg-uploader' onChange={this.handleBgImgUploadComplete} />
+				
+					</form>
+					<AttributeDropDown name='bgImg' ref='bgImg' value={this.state.elemData.bgImg||''} items={this.state.imageList||[]} handleListLineClick={this.handleListLineClick.bind(this,'bgImg')} handleListButtonClick={this.handleListButtonClick.bind(this,'bgImg')} buttonLabel='x' />
 					</AttributeLine>
 					<AttributeLine>
 					<AttributeLabel name='Background Color' /><AttributeInput name='bgColor' ref='bgColor' value={this.state.elemData.bgColor||''} /> 

@@ -21,7 +21,8 @@ module.exports= React.createClass({
 				w:800,
 				h:600,
 				pageList:[],
-				tagList:[]
+				tagList:[],
+				images:[]
 			},
 			curPageIdx:0
 		};	
@@ -121,6 +122,10 @@ module.exports= React.createClass({
 			project.tagList = projectElem.value;
 			this.setState({project:project});
 			break;
+			case 'imageList':
+			var images = this.state.project.images;
+			this.setState({images:projectElem.value});
+			break;
 		}
 		
 	},
@@ -163,7 +168,7 @@ module.exports= React.createClass({
 				<PageViewer pageList={project.pageList} />
 				<EditorD w={project.w} h={project.h} page={project.pageList[this.state.curPageIdx]||{}} />
 				<div className='rightcolumn'>
-					<AttributeList2 tagList={project.tagList} />
+					<AttributeList2 tagList={project.tagList} imageList={project.images} />
 					<Layers page={project.pageList[this.state.curPageIdx]||{}} />
 				</div>
 			</div>
