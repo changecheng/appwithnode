@@ -11,7 +11,9 @@ module.exports= React.createClass({
 	// },
 	componentWillReceiveProps:function(newProps){
 		//console.log(newProps);
-		this.setState({pageList:newProps.pageList});	
+		console.log('pageViewer');
+		console.log(newProps);
+		this.setState({pageList:newProps.pageList||[]});	
 	},
 	// componentDidMount:function(){
 	// 	this.us_updatePageViewer = updatePageViewerStore.listen(this.handleUpdatePageViewer);	
@@ -40,13 +42,16 @@ var SinglePageViewer=React.createClass({
 		//console.log(this.props.index);
 		Actions.changePage(this.props.index);
 	},
+	handleRightClick:function(e){
+		console.log(e);
+	},
 	render:function(){
 		return (
 			<div className='singlePageViewer' onClick={this.handleClick} >
 				<div className='listNumber' >
 					{this.props.index}
 				</div>
-				<div className='pageThumbnail'>
+				<div className='pageThumbnail' onContextMenu={this.handleRightClick}>
 					<img className='thumbnail' src='' alt={this.props.index} />
 				</div>
 			</div>

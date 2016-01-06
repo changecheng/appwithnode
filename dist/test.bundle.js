@@ -19655,18 +19655,21 @@
 	var AttributeList2 = __webpack_require__(195);
 	var Tools = __webpack_require__(441);
 	var Layers = __webpack_require__(169);
-	var PageViewer = __webpack_require__(444);
+	var PageViewer = __webpack_require__(445);
 	var $ = __webpack_require__(440);
 	var Actions = __webpack_require__(171);
 	var changePageStore = __webpack_require__(194);
-	var addNewPageStore = __webpack_require__(446);
-	var updateProjectStore = __webpack_require__(447);
-	var saveDataStore = __webpack_require__(448);
+	var addNewPageStore = __webpack_require__(447);
+	var updateProjectStore = __webpack_require__(448);
+	var saveDataStore = __webpack_require__(449);
+	var undoRedoStore = __webpack_require__(450);
 	module.exports = React.createClass({
 		displayName: 'exports',
 
 		getInitialState: function () {
 			return {
+				projectQueue: { curIdx: 0, queue: [] },
+				undoRedoQueue: { curIdx: 0, queue: [] },
 				project: {
 					name: "defaultProject",
 					author: "xx",
@@ -19706,7 +19709,7 @@
 				cache: false,
 				success: (function (data) {
 					console.log(data);
-					this.setState({ project: data });
+					this.setState({ project: data, projectQueue: { curIdx: 0, queue: [this.deepCopy(data)] } });
 					// this.parseProject();
 				}).bind(this),
 				error: (function (xhr, status, err) {
@@ -19757,28 +19760,78 @@
 				newPage.id = "0";
 			}
 			pageList.push(newPage);
-			console.log(pageList);
+			//console.log(pageList);
 			this.setState({ pageList: pageList });
-			console.log(this.state.project.pageList);
+			//console.log(this.state.project.pageList);
 			//Actions.updatePageViewer(pageList);
 		},
 		handleUpdateProject: function (projectElem) {
+			// console.log(this.state.project.pageList);
+			var undo = { type: '', oldValue: '' };
 			switch (projectElem.elem) {
 				case 'page':
+					// console.log(this.state.project.pageList);
 					var pageList = this.state.project.pageList;
+					// console.log(pageList[0]);
+					// console.log(projectElem);
+					// undo.type = 'page';
+					// undo.oldValue = {pageIdx:this.state.curPageIdx,page:pageList.slice(0)[this.state.curPageIdx]};
 					pageList[this.state.curPageIdx] = projectElem.value;
+
 					this.setState({ pageList: pageList });
+
 					break;
 				case 'tagList':
 					var project = this.state.project;
+					// undo.type = 'tagList';
+					// undo.oldValue = project.tagList.slice(0);
 					project.tagList = projectElem.value;
 					this.setState({ project: project });
 					break;
 				case 'imageList':
 					var images = this.state.project.images;
+					// undo.type = 'imageList';
+					// undo.oldValue = images.slice(0);
 					this.setState({ images: projectElem.value });
 					break;
 			}
+			// var undoRedoQueue = this.state.undoRedoQueue;
+			// undoRedoQueue.queue[undoRedoQueue.curIdx] = undo;
+			// undoRedoQueue.curIdx = (undoRedoQueue.curIdx+1)%5;
+			// this.setState({undoRedoQueue:undoRedoQueue});
+
+			var projectQueue = this.state.projectQueue;
+			projectQueue.queue = projectQueue.queue.slice(0, projectQueue.curIdx + 1);
+			//projectQueue.queue.push([this.state.project].slice(0)[0]);
+			projectQueue.queue.push(this.deepCopy(this.state.project));
+			if (projectQueue.curIdx + 1 > 5) {
+				projectQueue.queue.shift();
+			} else {
+				projectQueue.curIdx = projectQueue.curIdx + 1;
+			}
+			this.setState({ projectQueue: projectQueue });
+		},
+		deepCopy: function (obj) {
+			var newObj = new Object();
+			if (typeof obj != 'object') {
+				return obj;
+			};
+			for (var key in obj) {
+				if (typeof obj[key] == 'object') {
+					if (obj[key] instanceof Array) {
+						//newObj[key] = obj[key].slice(0);
+						newObj[key] = [];
+						for (var i = 0; i < obj[key].length; i++) {
+							newObj[key].push(this.deepCopy(obj[key][i]));
+						}
+					} else {
+						newObj[key] = this.deepCopy(obj[key]);
+					}
+				} else {
+					newObj[key] = obj[key];
+				}
+			}
+			return newObj;
 		},
 		handleSaveData: function () {
 			//var url = 'file:///Volumes/Macintosh%20HD/Work/html/appwithnode/public/data/pageData_save.json';
@@ -19798,18 +19851,42 @@
 				}).bind(this)
 			});
 		},
+		handleUndoRedo: function (type) {
+			switch (type) {
+				case 'undo':
+					var projectQueue = this.state.projectQueue;
+					if (projectQueue.curIdx > 0) {
+						console.log(projectQueue.queue[projectQueue.curIdx - 1]);
+						this.setState({ project: projectQueue.queue[projectQueue.curIdx - 1] });
+
+						projectQueue.curIdx = projectQueue.curIdx - 1;
+						this.setState({ projectQueue: projectQueue });
+					};
+					break;
+				case 'redo':
+					var projectQueue = this.state.projectQueue;
+					if (projectQueue.curIdx < projectQueue.queue.length - 1) {
+						this.setState({ project: projectQueue.queue[projectQueue.curIdx + 1] });
+						projectQueue.curIdx = projectQueue.curIdx + 1;
+						this.setState({ projectQueue: projectQueue });
+					};
+					break;
+			}
+		},
 		componentDidMount: function () {
 			this.loadProject();
 			this.us_changePage = changePageStore.listen(this.handleChangePage);
 			this.us_addNewPage = addNewPageStore.listen(this.handleAddNewPage);
 			this.us_updateProject = updateProjectStore.listen(this.handleUpdateProject);
 			this.us_saveData = saveDataStore.listen(this.handleSaveData);
+			this.us_undoRedo = undoRedoStore.listen(this.handleUndoRedo);
 		},
 		componentWillUnmount: function () {
 			this.us_changePage();
 			this.us_addNewPage();
 			this.us_updateProject();
 			this.us_saveData();
+			this.us_undoRedo();
 		},
 		render: function () {
 			var project = this.state.project;
@@ -20794,7 +20871,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Reflux = __webpack_require__(172);
-	var Actions = Reflux.createActions(["addElement", "changeAttr", "setTarget", "saveData", "changePage", "updateLayers", "updatePageViewer", "addNewPage", "updateProject"]);
+	var Actions = Reflux.createActions(["addElement", "changeAttr", "setTarget", "saveData", "changePage", "updateLayers", "updatePageViewer", "addNewPage", "updateProject", "undo", "redo"]);
 	module.exports = Actions;
 
 /***/ },
@@ -48928,6 +49005,7 @@
 	var React = __webpack_require__(1);
 	var AddWidgetButton = __webpack_require__(442);
 	var SaveDataButton = __webpack_require__(443);
+	var UndoRedoButton = __webpack_require__(444);
 	module.exports = React.createClass({
 		displayName: 'exports',
 
@@ -48937,7 +49015,9 @@
 				{ className: 'tools' },
 				React.createElement(AddWidgetButton, { name: 'Button', widget: 'button' }),
 				React.createElement(AddWidgetButton, { name: 'Canvas', widget: 'canvas' }),
-				React.createElement(SaveDataButton, null)
+				React.createElement(SaveDataButton, null),
+				React.createElement(UndoRedoButton, { name: 'Undo', type: 'undo' }),
+				React.createElement(UndoRedoButton, { name: 'Redo', type: 'redo' })
 			);
 		}
 	});
@@ -48994,8 +49074,35 @@
 
 	var React = __webpack_require__(1);
 	var Actions = __webpack_require__(171);
+
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		handleClick: function (e) {
+			e.preventDefault();
+			if (this.props.type == 'undo') {
+				Actions.undo();
+			} else if (this.props.type == 'redo') {
+				Actions.redo();
+			}
+		},
+		render: function () {
+			return React.createElement(
+				'button',
+				{ className: 'toolbox-button', onClick: this.handleClick },
+				this.props.name || 'undo'
+			);
+		}
+	});
+
+/***/ },
+/* 445 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(1);
+	var Actions = __webpack_require__(171);
 	var changePageStore = __webpack_require__(194);
-	var updatePageViewerStore = __webpack_require__(445);
+	var updatePageViewerStore = __webpack_require__(446);
 	module.exports = React.createClass({
 		displayName: 'exports',
 
@@ -49007,7 +49114,9 @@
 		// },
 		componentWillReceiveProps: function (newProps) {
 			//console.log(newProps);
-			this.setState({ pageList: newProps.pageList });
+			console.log('pageViewer');
+			console.log(newProps);
+			this.setState({ pageList: newProps.pageList || [] });
 		},
 		// componentDidMount:function(){
 		// 	this.us_updatePageViewer = updatePageViewerStore.listen(this.handleUpdatePageViewer);	
@@ -49041,6 +49150,9 @@
 			//console.log(this.props.index);
 			Actions.changePage(this.props.index);
 		},
+		handleRightClick: function (e) {
+			console.log(e);
+		},
 		render: function () {
 			return React.createElement(
 				'div',
@@ -49052,7 +49164,7 @@
 				),
 				React.createElement(
 					'div',
-					{ className: 'pageThumbnail' },
+					{ className: 'pageThumbnail', onContextMenu: this.handleRightClick },
 					React.createElement('img', { className: 'thumbnail', src: '', alt: this.props.index })
 				)
 			);
@@ -49060,7 +49172,7 @@
 	});
 
 /***/ },
-/* 445 */
+/* 446 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49075,7 +49187,7 @@
 	});
 
 /***/ },
-/* 446 */
+/* 447 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49090,7 +49202,7 @@
 	});
 
 /***/ },
-/* 447 */
+/* 448 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49106,7 +49218,7 @@
 	});
 
 /***/ },
-/* 448 */
+/* 449 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49117,6 +49229,25 @@
 		},
 		onSaveData: function () {
 			this.trigger();
+		}
+	});
+
+/***/ },
+/* 450 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Actions = __webpack_require__(171);
+	var Reflux = __webpack_require__(172);
+	module.exports = Reflux.createStore({
+		init: function () {
+			this.listenTo(Actions.undo, this.onUndo);
+			this.listenTo(Actions.redo, this.onRedo);
+		},
+		onUndo: function () {
+			this.trigger('undo');
+		},
+		onRedo: function () {
+			this.trigger('redo');
 		}
 	});
 
