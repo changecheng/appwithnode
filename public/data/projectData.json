@@ -29,40 +29,23 @@
                     "id": "0.0",
                     "w": 400,
                     "h": 400,
-                    "x": 256,
-                    "y": 158,
-                    "bgImg":"moon.jpg",
-                    "bgColor":"",
+                    "x": 50,
+                    "y": 50,
                     "zIndex": 0,
-                    "curSubCanvasIdx": 2,
+                    "curSubCanvasIdx": 0,
                     "subCanvasList": [
                         {
-                            "name": "sc1",
+                            "name": "defaultSC",
                             "type": "subCanvas",
                             "id": "0.0.0",
                             "zIndex": 0,
-                            "bgColor": "white",
+                            "bgColor": "rgba(255,255,255,0)",
                             "bgImg": "",
                             "widgetList": [
                                 {
-                                    "name": "button1",
-                                    "type": "widget",
-                                    "id": "0.0.0.0",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 10,
-                                    "y": 10,
-                                    "zIndex": 0,
-                                    "bgColor": "blue",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tag": "tag1"
-                                },
-                                {
                                     "name": "default",
                                     "type": "widget",
-                                    "id": "0.0.0.1",
+                                    "id": "0.0.0.0",
                                     "w": 50,
                                     "h": 50,
                                     "x": 100,
@@ -71,216 +54,47 @@
                                     "bgColor": "green",
                                     "currentSlice": 0,
                                     "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "sc2",
-                            "type": "subCanvas",
-                            "id": "0.0.1",
-                            "zIndex": 10,
-                            "widgetList": [
-                                {
-                                    "name": "button2",
-                                    "id": "0.0.1.0",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 269,
-                                    "y": 166,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tag": "tag1"
-                                },
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.1.1",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 55,
-                                    "y": 42,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                },
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.1.2",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 61,
-                                    "y": 191,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                },
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.1.3",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 212,
-                                    "y": 79,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                },
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.1.4",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 143,
-                                    "y": 205,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                }
-                            ]
-                        },
-                        {
-                            "name": "sc3",
-                            "type": "subCanvas",
-                            "id": "0.0.2",
-                            "zIndex": 0,
-                            "bgColor": "white",
-                            "bgImg": "",
-                            "widgetList": [
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.2.0",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 112,
-                                    "y": 235,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
-                                },
-                                {
-                                    "name": "default",
-                                    "type": "widget",
-                                    "id": "0.0.2.1",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 210,
-                                    "y": 146,
-                                    "zIndex": 0,
-                                    "bgColor": "green",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tagList": []
+                                    "triggerList": [
+                                        "Click"
+                                    ],
+                                    "tag": "",
+                                    "action": {
+                                        "name": "button action",
+                                        "content": [
+                                            [
+                                                "On",
+                                                "Click",
+                                                0
+                                            ],
+                                            [
+                                                "Add",
+                                                "tag1",
+                                                "1"
+                                            ]
+                                        ]
+                                    }
                                 }
                             ]
                         }
                     ],
-                    "canvasActionList": [],
-                    "tag": "tag1"
+                    "triggerList": [],
+                    "action": {
+                        "name": "default",
+                        "content": []
+                    },
+                    "tag": ""
                 }
             ],
-            "pageActionList": [],
-            "tag": "tag1"
-        },
-        {
-            "name": "page2",
-            "type": "page",
-            "id": "1",
-            "w": 800,
-            "h": 600,
-            "bgImg": "moon.jpg",
-            "bgColor": "blue",
-            "canvasList": [
-                {
-                    "name": "canvas2",
-                    "type": "canvas",
-                    "id": "1.0",
-                    "w": 400,
-                    "h": 400,
-                    "x": 50,
-                    "y": 50,
-                    "zIndex": 0,
-                    "bgImg":"moon.jpg",
-                    "bgColor":"",
-                    "curSubCanvasIdx": 0,
-                    "subCanvasList": [
-                        {
-                            "name": "sc2",
-                            "type": "subCanvas",
-                            "id": "1.0.0",
-                            "zIndex": 0,
-                            "bgColor": "white",
-                            "bgImg": "",
-                            "widgetList": [
-                                {
-                                    "name": "button3",
-                                    "type": "widget",
-                                    "id": "1.0.0.0",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 10,
-                                    "y": 10,
-                                    "zIndex": 0,
-                                    "bgColor": "blue",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tag": "tag1"
-                                }
-                            ]
-                        },
-                        {
-                            "name": "sc4",
-                            "type": "subCanvas",
-                            "id": "1.0.1",
-                            "zIndex": 10,
-                            "widgetList": [
-                                {
-                                    "name": "button4",
-                                    "id": "1.0.1.0",
-                                    "w": 50,
-                                    "h": 50,
-                                    "x": 200,
-                                    "y": 200,
-                                    "zIndex": 0,
-                                    "bgColor": "gray",
-                                    "currentSlice": 0,
-                                    "texList": [],
-                                    "triggerList": [],
-                                    "tag": "tag1"
-                                }
-                            ]
-                        }
-                    ],
-                    "canvasActionList": [],
-                    "tag": "tag1"
-                }
-            ],
-            "pageActionList": [],
+            "action": {
+                "name": "action2",
+                "content": [
+                    [
+                        "Add",
+                        "tag1",
+                        "1"
+                    ]
+                ]
+            },
             "tag": "tag1"
         }
     ]

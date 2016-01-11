@@ -5,7 +5,7 @@ module.exports = Reflux.createStore({
 	init:function(){
 		this.listenTo(Actions.changePage,this.onChangePage);
 	},
-	onChangePage:function(index){
-		this.trigger(index);
+	onChangePage:function(index,type){
+		this.trigger(index,type);
 	}
 });

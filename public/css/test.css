@@ -4,7 +4,7 @@
 	border:1px solid gray;
 	overflow: scroll;
 	float: left;
-	width:60%;
+	width:65%;
 }
 .pageViewer{
 	border:1px solid gray;
@@ -32,6 +32,7 @@
 	height: 700px;
 	position: absolute;
 	right: 1em;
+	background-color: white;
 }
 .attributelist{
 	margin: 0;
@@ -83,4 +84,44 @@ ul{
 	display: inline-block;
 	width: 60%;
 
+}
+.actionpanel{
+	position: absolute;
+	clear:both;
+	width:60%;
+	padding: 1em;
+	border:1px solid gray;
+	background-color: white;
+}
+.actionpanel-close{
+	position: absolute;
+	right: 1em;
+}
+.actionpanel-dropdown{
+	width:40%;
+	margin: 1em;
+	display: inline-block;
+	position: relative;
+}
+.actionpanel-dropdown-dropdown{
+	width:100%;
+	height: 1em;
+	position: absolute;
+}
+.actionpanel-dropdown-input{
+	width:90%;
+	height: 1em;
+	position: absolute;
+	border:1px hidden white;
+	z-index: 10;
+	margin-top: 3px;
+}
+.actionpanel-table{
+	width:100%;
+	table-layout: fixed;
+	/*padding: 0 1em;*/
+}
+.actionpanel-table-column{
+	width:25%;
+	overflow: hidden;
 }

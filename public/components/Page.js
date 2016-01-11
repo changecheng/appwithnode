@@ -12,7 +12,7 @@ module.exports= React.createClass({
 		}.bind(this)
 		);
 		return (
-			<Container2 className='page' title='page' type='page' id={this.props.id} w={this.props.w||800} h={this.props.h||800} x={0} y={0} bgColor={this.props.bgColor} bgImg={this.props.bgImg} >
+			<Container2 className='page' title='page' type='page' id={this.props.id} w={this.props.w||800} h={this.props.h||800} x={this.props.x||0} y={this.props.y||0} bgColor={this.props.bgColor} bgImg={this.props.bgImg} >
 			{canvases}
 			</Container2>
 		);

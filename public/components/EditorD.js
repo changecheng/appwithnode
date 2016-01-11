@@ -188,8 +188,12 @@ module.exports= React.createClass({
 				bgColor:"green",
 				currentSlice:0,
 				texList:[],
-				triggerList:[],
-				tagList:[]
+				triggerList:['Click'],
+				tag:'',
+				action:{
+					name:'default',
+					content:[]
+				}
 			}
 			var curActiveSubCanvasIdx = this.findCurActiveSubCanvas();
 
@@ -233,8 +237,12 @@ module.exports= React.createClass({
 						widgetList:[]
 					}
 				],
-				canvasActionList:[],
-				tagList:[]
+				triggerList:[],
+				action:{
+					name:'default',
+					content:[]
+				},
+				tag:''
 			}
 			if (page.canvasList.length) {
 				var curMaxIds = page.canvasList[this.findMax(page.canvasList,'id')].id.split('.');
@@ -461,9 +469,12 @@ module.exports= React.createClass({
 			//elem chosen
 			for (var i = 0; i < draggingElems.length; i++) {
 				targetData = this.findTargetData('get',draggingElems[i],0);
-				targetData.x += offset.x;
-				targetData.y += offset.y;
-				this.setState({targetData:targetData});
+				if (targetData.type!="") {
+					targetData.x += offset.x;
+					targetData.y += offset.y;
+					this.setState({targetData:targetData});
+				};
+				
 			};
 		};
 	},
@@ -505,7 +516,7 @@ module.exports= React.createClass({
 		var page = this.state.page;
 		var pageDom="";
 		if (page.id) {
-			pageDom=<Page key={page.id} w={page.w} h={page.h} id={page.id} canvasList={page.canvasList||[]} bgColor={page.bgColor} bgImg={page.bgImg}>
+			pageDom=<Page key={page.id} w={page.w} h={page.h} x={page.x} y={page.y}  id={page.id} canvasList={page.canvasList||[]} bgColor={page.bgColor} bgImg={page.bgImg}>
 			</Page>
 		};
 		//console.log(page.backgroundColor);

@@ -43,6 +43,9 @@ module.exports= React.createClass({
 			case 'y':
 				elemData[name] = parseInt(value);	
 				break;
+			case 'action':
+				elemData[name]['name'] = value;
+				break;
 			case 'scName':
 				var subCanvas = elemData.subCanvasList[this.state.curSubCanvasIdx];
 				subCanvas.name = value;
@@ -58,6 +61,7 @@ module.exports= React.createClass({
 			case 'subCanvasList':
 				this.setState({curSubCanvasName:value});
 				break;
+
 
 			
 		}
@@ -161,11 +165,16 @@ module.exports= React.createClass({
 
 				}
 				this.setState({subCanvas:subCanvas});
+			}else if (name=='subCanvasList') {
+
+				this.refs['subCanvasList'].value = oldValue;
+				
+			}else if(name=='action'){
+				var elemData = this.state.elemData;
+				elemData[e.target.name]['name'] = oldValue;
+				this.setState({elemData:elemData});
 			}else{
-				if (name=='subCanvasList') {
-					this.refs['subCanvasList'].value = oldValue;
-					return;
-				}
+				
 				var elemData = this.state.elemData;
 				elemData[e.target.name] = oldValue;
 				this.setState({elemData:elemData});
@@ -263,6 +272,11 @@ module.exports= React.createClass({
 	    });
 	    e.preventDefault();
 	},
+	handleShowAction:function(){
+		var action = this.state.elemData.action||{name:'',content:[]};
+		var triggerList = this.state.elemData.triggerList||[];
+		Actions.editingAction(action,triggerList);	
+	},
 	componentDidMount:function(){
 		this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
 	},
@@ -307,6 +321,20 @@ module.exports= React.createClass({
 		}else{
 			subCanvasGroup = '';
 		}
+
+		//consider action
+		var elemData = this.state.elemData;
+		var actionDOM = '';
+		if (elemData.type=='page'||elemData.type=='canvas'||elemData.type=='widget') {
+			actionDOM = (
+				<AttributeGroup groupTitle='Action'>
+				    <AttributeLine>
+				        <AttributeLabel name='Action' /><AttributeInput name='action' ref='action' value={elemData.action.name} /> <button className='attribute-action' onClick={this.handleShowAction} >edit</button>
+				    </AttributeLine>
+				</AttributeGroup>
+
+			);
+		};
 		return (
 			<div className='attributelist' onChange={this.handleChange} onFocus={this.handleFocus} onKeyDown={this.handleKeyPress} onBlur={this.handleBlur}  >
 				<AttributeGroup groupTitle='Basic Info'>
@@ -347,6 +375,7 @@ module.exports= React.createClass({
 					</AttributeLine>
 				</AttributeGroup>
 				{subCanvasGroup}
+				{actionDOM}
 			</div>
 		);
 	}
@@ -386,9 +415,12 @@ var AttributeLabel = React.createClass({
 });
 
 var AttributeInput = React.createClass({
+	handleChange:function(){
+		
+	},
 	render:function(){
 		return (
-			<input className='attribute-input' name={this.props.name} ref={this.props.ref} type={this.props.type||'text'} value={this.props.value} />
+			<input className='attribute-input' name={this.props.name} ref={this.props.ref} type={this.props.type||'text'} value={this.props.value} onChange={this.handleChange} />
 		);
 	}
 });

@@ -6,6 +6,8 @@ var AttributeList2 = require('./AttributeList2');
 var Tools = require('./Tools');
 var Layers = require('./Layers');
 var PageViewer = require('./PageViewer');
+var ActionPanel = require('./ActionPanel');
+
 var $ = require('jquery');
 var Actions = require('../actions/actions');
 var changePageStore = require('../stores/changePageStore');
@@ -83,10 +85,21 @@ module.exports= React.createClass({
 	      }.bind(this)
 	    });
 	},
-	handleChangePage:function(pageIdx){
-		this.setState({curPageIdx:pageIdx});
+	handleChangePage:function(pageIdx,type){
+		this.pushHistoryQueue();
+		if (type=='change') {
+			this.setState({curPageIdx:pageIdx});
+		}else if (type=='delete'){
+			var pageList = this.state.project.pageList;
+			if (pageIdx in pageList) {
+				pageList.splice(pageIdx,1);
+				this.setState({pageList:pageList,pageIdx:pageIdx-1});
+			};
+		}
+		
 	},
 	handleAddNewPage:function(){
+		this.pushHistoryQueue();
 		console.log('add new page');
 		var pageList = this.state.project.pageList;
 		var newPage = {
@@ -98,8 +111,12 @@ module.exports= React.createClass({
 			bgImg:"",
 			bgColor:"white",
 			canvasList:[],
-			pageActionList:[],
-			tagList:[]
+			triggerList:[],
+			action:{
+				name:'default',
+				content:[]
+			},
+			tag:''
 		};
 		if (pageList.length) {
 			var pageMaxId =pageList[this.findMax(pageList,'id')].id;
@@ -113,9 +130,22 @@ module.exports= React.createClass({
 		//console.log(this.state.project.pageList);
 		//Actions.updatePageViewer(pageList);
 	},
+	pushHistoryQueue:function(){
+		var projectQueue = this.state.projectQueue;
+		projectQueue.queue = projectQueue.queue.slice(0,projectQueue.curIdx+1);
+		//projectQueue.queue.push([this.state.project].slice(0)[0]);
+		projectQueue.queue.push(this.deepCopy(this.state.project));
+		if (projectQueue.curIdx + 1 >5){
+			projectQueue.queue.shift();
+		}else{
+			projectQueue.curIdx = projectQueue.curIdx + 1;
+		}
+		this.setState({projectQueue:projectQueue});	
+	},
 	handleUpdateProject:function(projectElem){
 		// console.log(this.state.project.pageList);
 		var undo={type:'',oldValue:''};
+		this.pushHistoryQueue();
 		switch (projectElem.elem){
 			case 'page':
 			// console.log(this.state.project.pageList);
@@ -148,16 +178,7 @@ module.exports= React.createClass({
 		// undoRedoQueue.curIdx = (undoRedoQueue.curIdx+1)%5;
 		// this.setState({undoRedoQueue:undoRedoQueue});
 
-		var projectQueue = this.state.projectQueue;
-		projectQueue.queue = projectQueue.queue.slice(0,projectQueue.curIdx+1);
-		//projectQueue.queue.push([this.state.project].slice(0)[0]);
-		projectQueue.queue.push(this.deepCopy(this.state.project));
-		if (projectQueue.curIdx + 1 >5){
-			projectQueue.queue.shift();
-		}else{
-			projectQueue.curIdx = projectQueue.curIdx + 1;
-		}
-		this.setState({projectQueue:projectQueue});
+		
 		
 	},
 	deepCopy:function(obj){
@@ -207,7 +228,7 @@ module.exports= React.createClass({
 			var projectQueue = this.state.projectQueue;
 			if (projectQueue.curIdx>0) {
 				console.log(projectQueue.queue[projectQueue.curIdx-1]);
-				this.setState({project:projectQueue.queue[projectQueue.curIdx-1]});
+				this.setState({project:this.deepCopy(projectQueue.queue[projectQueue.curIdx-1])});
 
 				projectQueue.curIdx=projectQueue.curIdx-1;
 				this.setState({projectQueue:projectQueue});
@@ -217,7 +238,7 @@ module.exports= React.createClass({
 			case 'redo':
 			var projectQueue = this.state.projectQueue;
 			if (projectQueue.curIdx<projectQueue.queue.length-1) {
-				this.setState({project:projectQueue.queue[projectQueue.curIdx+1]});
+				this.setState({project:this.deepCopy(projectQueue.queue[projectQueue.curIdx+1])});
 				projectQueue.curIdx = projectQueue.curIdx+1;
 				this.setState({projectQueue:projectQueue});
 			};
@@ -250,6 +271,7 @@ module.exports= React.createClass({
 					<AttributeList2 tagList={project.tagList} imageList={project.images} />
 					<Layers page={project.pageList[this.state.curPageIdx]||{}} />
 				</div>
+				<ActionPanel tagList={project.tagList} />
 			</div>
 		);
 	}

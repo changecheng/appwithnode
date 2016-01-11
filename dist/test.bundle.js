@@ -19656,13 +19656,15 @@
 	var Tools = __webpack_require__(441);
 	var Layers = __webpack_require__(169);
 	var PageViewer = __webpack_require__(445);
+	var ActionPanel = __webpack_require__(447);
+
 	var $ = __webpack_require__(440);
 	var Actions = __webpack_require__(171);
 	var changePageStore = __webpack_require__(194);
-	var addNewPageStore = __webpack_require__(447);
-	var updateProjectStore = __webpack_require__(448);
-	var saveDataStore = __webpack_require__(449);
-	var undoRedoStore = __webpack_require__(450);
+	var addNewPageStore = __webpack_require__(449);
+	var updateProjectStore = __webpack_require__(450);
+	var saveDataStore = __webpack_require__(451);
+	var undoRedoStore = __webpack_require__(452);
 	module.exports = React.createClass({
 		displayName: 'exports',
 
@@ -19735,10 +19737,20 @@
 				}).bind(this)
 			});
 		},
-		handleChangePage: function (pageIdx) {
-			this.setState({ curPageIdx: pageIdx });
+		handleChangePage: function (pageIdx, type) {
+			this.pushHistoryQueue();
+			if (type == 'change') {
+				this.setState({ curPageIdx: pageIdx });
+			} else if (type == 'delete') {
+				var pageList = this.state.project.pageList;
+				if (pageIdx in pageList) {
+					pageList.splice(pageIdx, 1);
+					this.setState({ pageList: pageList, pageIdx: pageIdx - 1 });
+				};
+			}
 		},
 		handleAddNewPage: function () {
+			this.pushHistoryQueue();
 			console.log('add new page');
 			var pageList = this.state.project.pageList;
 			var newPage = {
@@ -19750,8 +19762,12 @@
 				bgImg: "",
 				bgColor: "white",
 				canvasList: [],
-				pageActionList: [],
-				tagList: []
+				triggerList: [],
+				action: {
+					name: 'default',
+					content: []
+				},
+				tag: ''
 			};
 			if (pageList.length) {
 				var pageMaxId = pageList[this.findMax(pageList, 'id')].id;
@@ -19765,9 +19781,22 @@
 			//console.log(this.state.project.pageList);
 			//Actions.updatePageViewer(pageList);
 		},
+		pushHistoryQueue: function () {
+			var projectQueue = this.state.projectQueue;
+			projectQueue.queue = projectQueue.queue.slice(0, projectQueue.curIdx + 1);
+			//projectQueue.queue.push([this.state.project].slice(0)[0]);
+			projectQueue.queue.push(this.deepCopy(this.state.project));
+			if (projectQueue.curIdx + 1 > 5) {
+				projectQueue.queue.shift();
+			} else {
+				projectQueue.curIdx = projectQueue.curIdx + 1;
+			}
+			this.setState({ projectQueue: projectQueue });
+		},
 		handleUpdateProject: function (projectElem) {
 			// console.log(this.state.project.pageList);
 			var undo = { type: '', oldValue: '' };
+			this.pushHistoryQueue();
 			switch (projectElem.elem) {
 				case 'page':
 					// console.log(this.state.project.pageList);
@@ -19799,17 +19828,6 @@
 			// undoRedoQueue.queue[undoRedoQueue.curIdx] = undo;
 			// undoRedoQueue.curIdx = (undoRedoQueue.curIdx+1)%5;
 			// this.setState({undoRedoQueue:undoRedoQueue});
-
-			var projectQueue = this.state.projectQueue;
-			projectQueue.queue = projectQueue.queue.slice(0, projectQueue.curIdx + 1);
-			//projectQueue.queue.push([this.state.project].slice(0)[0]);
-			projectQueue.queue.push(this.deepCopy(this.state.project));
-			if (projectQueue.curIdx + 1 > 5) {
-				projectQueue.queue.shift();
-			} else {
-				projectQueue.curIdx = projectQueue.curIdx + 1;
-			}
-			this.setState({ projectQueue: projectQueue });
 		},
 		deepCopy: function (obj) {
 			var newObj = new Object();
@@ -19857,7 +19875,7 @@
 					var projectQueue = this.state.projectQueue;
 					if (projectQueue.curIdx > 0) {
 						console.log(projectQueue.queue[projectQueue.curIdx - 1]);
-						this.setState({ project: projectQueue.queue[projectQueue.curIdx - 1] });
+						this.setState({ project: this.deepCopy(projectQueue.queue[projectQueue.curIdx - 1]) });
 
 						projectQueue.curIdx = projectQueue.curIdx - 1;
 						this.setState({ projectQueue: projectQueue });
@@ -19866,7 +19884,7 @@
 				case 'redo':
 					var projectQueue = this.state.projectQueue;
 					if (projectQueue.curIdx < projectQueue.queue.length - 1) {
-						this.setState({ project: projectQueue.queue[projectQueue.curIdx + 1] });
+						this.setState({ project: this.deepCopy(projectQueue.queue[projectQueue.curIdx + 1]) });
 						projectQueue.curIdx = projectQueue.curIdx + 1;
 						this.setState({ projectQueue: projectQueue });
 					};
@@ -19901,7 +19919,8 @@
 					{ className: 'rightcolumn' },
 					React.createElement(AttributeList2, { tagList: project.tagList, imageList: project.images }),
 					React.createElement(Layers, { page: project.pageList[this.state.curPageIdx] || {} })
-				)
+				),
+				React.createElement(ActionPanel, { tagList: project.tagList })
 			);
 		}
 	});
@@ -20099,8 +20118,12 @@
 						bgColor: "green",
 						currentSlice: 0,
 						texList: [],
-						triggerList: [],
-						tagList: []
+						triggerList: ['Click'],
+						tag: '',
+						action: {
+							name: 'default',
+							content: []
+						}
 					};
 					var curActiveSubCanvasIdx = this.findCurActiveSubCanvas();
 
@@ -20142,8 +20165,12 @@
 							bgImg: "",
 							widgetList: []
 						}],
-						canvasActionList: [],
-						tagList: []
+						triggerList: [],
+						action: {
+							name: 'default',
+							content: []
+						},
+						tag: ''
 					};
 					if (page.canvasList.length) {
 						var curMaxIds = page.canvasList[this.findMax(page.canvasList, 'id')].id.split('.');
@@ -20367,9 +20394,11 @@
 				//elem chosen
 				for (var i = 0; i < draggingElems.length; i++) {
 					targetData = this.findTargetData('get', draggingElems[i], 0);
-					targetData.x += offset.x;
-					targetData.y += offset.y;
-					this.setState({ targetData: targetData });
+					if (targetData.type != "") {
+						targetData.x += offset.x;
+						targetData.y += offset.y;
+						this.setState({ targetData: targetData });
+					};
 				};
 			};
 		},
@@ -20410,7 +20439,7 @@
 			var page = this.state.page;
 			var pageDom = "";
 			if (page.id) {
-				pageDom = React.createElement(Page, { key: page.id, w: page.w, h: page.h, id: page.id, canvasList: page.canvasList || [], bgColor: page.bgColor, bgImg: page.bgImg });
+				pageDom = React.createElement(Page, { key: page.id, w: page.w, h: page.h, x: page.x, y: page.y, id: page.id, canvasList: page.canvasList || [], bgColor: page.bgColor, bgImg: page.bgImg });
 			};
 			//console.log(page.backgroundColor);
 			return React.createElement(
@@ -20620,7 +20649,7 @@
 			}).bind(this));
 			return React.createElement(
 				Container2,
-				{ className: 'page', title: 'page', type: 'page', id: this.props.id, w: this.props.w || 800, h: this.props.h || 800, x: 0, y: 0, bgColor: this.props.bgColor, bgImg: this.props.bgImg },
+				{ className: 'page', title: 'page', type: 'page', id: this.props.id, w: this.props.w || 800, h: this.props.h || 800, x: this.props.x || 0, y: this.props.y || 0, bgColor: this.props.bgColor, bgImg: this.props.bgImg },
 				canvases
 			);
 		}
@@ -20871,7 +20900,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var Reflux = __webpack_require__(172);
-	var Actions = Reflux.createActions(["addElement", "changeAttr", "setTarget", "saveData", "changePage", "updateLayers", "updatePageViewer", "addNewPage", "updateProject", "undo", "redo"]);
+	var Actions = Reflux.createActions(["addElement", "changeAttr", "setTarget", "saveData", "changePage", "updateLayers", "updatePageViewer", "addNewPage", "updateProject", "undo", "redo", "editingAction"]);
 	module.exports = Actions;
 
 /***/ },
@@ -22332,8 +22361,8 @@
 		init: function () {
 			this.listenTo(Actions.changePage, this.onChangePage);
 		},
-		onChangePage: function (index) {
-			this.trigger(index);
+		onChangePage: function (index, type) {
+			this.trigger(index, type);
 		}
 	});
 
@@ -22387,6 +22416,9 @@
 				case 'x':
 				case 'y':
 					elemData[name] = parseInt(value);
+					break;
+				case 'action':
+					elemData[name]['name'] = value;
 					break;
 				case 'scName':
 					var subCanvas = elemData.subCanvasList[this.state.curSubCanvasIdx];
@@ -22504,11 +22536,15 @@
 
 					}
 					this.setState({ subCanvas: subCanvas });
+				} else if (name == 'subCanvasList') {
+
+					this.refs['subCanvasList'].value = oldValue;
+				} else if (name == 'action') {
+					var elemData = this.state.elemData;
+					elemData[e.target.name]['name'] = oldValue;
+					this.setState({ elemData: elemData });
 				} else {
-					if (name == 'subCanvasList') {
-						this.refs['subCanvasList'].value = oldValue;
-						return;
-					}
+
 					var elemData = this.state.elemData;
 					elemData[e.target.name] = oldValue;
 					this.setState({ elemData: elemData });
@@ -22604,6 +22640,11 @@
 			});
 			e.preventDefault();
 		},
+		handleShowAction: function () {
+			var action = this.state.elemData.action || { name: '', content: [] };
+			var triggerList = this.state.elemData.triggerList || [];
+			Actions.editingAction(action, triggerList);
+		},
 		componentDidMount: function () {
 			this.us_setTarget = setTargetStore.listen(this.handleSetTarget);
 		},
@@ -22658,6 +22699,28 @@
 			} else {
 				subCanvasGroup = '';
 			}
+
+			//consider action
+			var elemData = this.state.elemData;
+			var actionDOM = '';
+			if (elemData.type == 'page' || elemData.type == 'canvas' || elemData.type == 'widget') {
+				actionDOM = React.createElement(
+					AttributeGroup,
+					{ groupTitle: 'Action' },
+					React.createElement(
+						AttributeLine,
+						null,
+						React.createElement(AttributeLabel, { name: 'Action' }),
+						React.createElement(AttributeInput, { name: 'action', ref: 'action', value: elemData.action.name }),
+						' ',
+						React.createElement(
+							'button',
+							{ className: 'attribute-action', onClick: this.handleShowAction },
+							'edit'
+						)
+					)
+				);
+			};
 			return React.createElement(
 				'div',
 				{ className: 'attributelist', onChange: this.handleChange, onFocus: this.handleFocus, onKeyDown: this.handleKeyPress, onBlur: this.handleBlur },
@@ -22730,7 +22793,8 @@
 						React.createElement(AttributeDropDown, { name: 'tag', ref: 'tag', value: this.state.elemData.tag || '', items: this.state.tagList || [], handleListLineClick: this.handleListLineClick.bind(this, 'tag'), handleListButtonClick: this.handleListButtonClick.bind(this, 'tag'), buttonLabel: 'x' })
 					)
 				),
-				subCanvasGroup
+				subCanvasGroup,
+				actionDOM
 			);
 		}
 	});
@@ -22779,8 +22843,9 @@
 	var AttributeInput = React.createClass({
 		displayName: 'AttributeInput',
 
+		handleChange: function () {},
 		render: function () {
-			return React.createElement('input', { className: 'attribute-input', name: this.props.name, ref: this.props.ref, type: this.props.type || 'text', value: this.props.value });
+			return React.createElement('input', { className: 'attribute-input', name: this.props.name, ref: this.props.ref, type: this.props.type || 'text', value: this.props.value, onChange: this.handleChange });
 		}
 	});
 
@@ -49100,6 +49165,7 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	var React = __webpack_require__(1);
+	//var ContextMenu = require('../commonComponents/ContextMenu');
 	var Actions = __webpack_require__(171);
 	var changePageStore = __webpack_require__(194);
 	var updatePageViewerStore = __webpack_require__(446);
@@ -49148,10 +49214,13 @@
 
 		handleClick: function (e) {
 			//console.log(this.props.index);
-			Actions.changePage(this.props.index);
+			Actions.changePage(this.props.index, 'change');
 		},
 		handleRightClick: function (e) {
 			console.log(e);
+		},
+		handleDelete: function (e) {
+			Actions.changePage(this.props.index, 'delete');
 		},
 		render: function () {
 			return React.createElement(
@@ -49166,6 +49235,11 @@
 					'div',
 					{ className: 'pageThumbnail', onContextMenu: this.handleRightClick },
 					React.createElement('img', { className: 'thumbnail', src: '', alt: this.props.index })
+				),
+				React.createElement(
+					'button',
+					{ className: 'delete', onClick: this.handleDelete },
+					'X'
 				)
 			);
 		}
@@ -49190,6 +49264,258 @@
 /* 447 */
 /***/ function(module, exports, __webpack_require__) {
 
+	var React = __webpack_require__(1);
+	var editingActionStore = __webpack_require__(448);
+	module.exports = React.createClass({
+		displayName: 'exports',
+
+		getInitialState: function () {
+			return {
+				hidden: true,
+				curAction: -1,
+				action: {
+					name: 'default',
+					content: [
+						// ['add','tag1',0],
+						// ['minus','tag2',1]
+					]
+				},
+				triggerList: []
+			};
+		},
+		handleChangeAction: function (target, value) {
+			if (this.state.curAction == -1) {
+				return;
+			};
+			// console.log(this.state.action.content);
+			// console.log(this.state.curAction);
+			var actionLine = this.state.action.content[this.state.curAction];
+			//console.log(actionLine);
+			switch (target) {
+				case 'op':
+					actionLine[0] = value;
+					break;
+				case 'tag':
+					actionLine[1] = value;
+					break;
+				case 'value':
+					actionLine[2] = value;
+					break;
+			}
+			this.setState({ actionLine: actionLine });
+		},
+		handleNameChange: function (e) {
+			var name = this.state.action.name;
+			this.setState({ name: e.target.value });
+		},
+		handleRowClick: function (i, e) {
+			console.log(i);
+
+			this.setState({ curAction: i });
+		},
+		handleDelete: function (i) {
+			var actionList = this.state.action.content;
+			actionList.splice(i, 1);
+			this.setState({ curAction: -1, actionList: actionList });
+		},
+		handleAdd: function () {
+			var actionList = this.state.action.content;
+			actionList.push(['op', 'tag', 0]);
+			this.setState({ curAction: actionList.length - 1, actionList: actionList });
+		},
+		handleClose: function () {
+			this.setState({ hidden: true });
+		},
+		handleEditingAction: function (action, triggerList) {
+			this.setState({ hidden: false, action: action, triggerList: triggerList });
+		},
+		componentDidMount: function () {
+			this.us_editingAction = editingActionStore.listen(this.handleEditingAction);
+		},
+		componentWillUnmount: function () {
+			this.us_editingAction();
+		},
+		render: function () {
+			var action = this.state.action.content[this.state.curAction];
+			var value = '';
+			if (action) {
+				value = action[2];
+			};
+
+			return React.createElement(
+				'div',
+				{ className: 'actionpanel', hidden: this.state.hidden },
+				React.createElement(
+					'span',
+					null,
+					'Name: '
+				),
+				React.createElement('input', { className: 'actionpanel-name', disabled: true, value: this.state.action.name, onChange: this.handleNameChange }),
+				React.createElement(
+					'button',
+					{ className: 'actionpanel-close', onClick: this.handleClose },
+					'X'
+				),
+				React.createElement(ActionAttrSlector, { tagList: this.props.tagList || [], triggerList: this.state.triggerList || [], changeAction: this.handleChangeAction, value: value }),
+				React.createElement(ActionForm, { actionLines: this.state.action.content, handleRowClick: this.handleRowClick, handleDelete: this.handleDelete, handleAdd: this.handleAdd })
+			);
+		}
+	});
+
+	var ActionAttrSlector = React.createClass({
+		displayName: 'ActionAttrSlector',
+
+		handleDropdownChange: function (target, value) {
+			this.props.changeAction(target, value);
+		},
+		render: function () {
+			return React.createElement(
+				'div',
+				{ className: 'actionpanel-attrslector' },
+				React.createElement(ActionDropDown, { items: ['', 'On', 'Add', 'Minus'], hidden: true, handleDropdownChange: this.handleDropdownChange.bind(this, 'op') }),
+				React.createElement(ActionDropDown, { items: [''].concat(this.props.tagList).concat(this.props.triggerList), hidden: true, handleDropdownChange: this.handleDropdownChange.bind(this, 'tag') }),
+				React.createElement(ActionDropDown, { items: [''].concat(this.props.tagList), hidden: false, value: this.props.value, handleDropdownChange: this.handleDropdownChange.bind(this, 'value') })
+			);
+		}
+	});
+
+	var ActionForm = React.createClass({
+		displayName: 'ActionForm',
+
+		handleRowClick: function (i, e) {
+			this.props.handleRowClick(i, e);
+			//console.log(i,e);
+		},
+		handleDelete: function (i) {
+			this.props.handleDelete(i);
+		},
+		handleAdd: function () {
+			this.props.handleAdd();
+		},
+		render: function () {
+			//var self = this;
+			var lines = this.props.actionLines || [];
+			var actions = lines.map((function (line, i) {
+				return React.createElement(ActionLine, { key: i, actionLine: line, handleRowClick: this.handleRowClick.bind(this, i), handleDelete: this.handleDelete.bind(this, i) });
+			}).bind(this));
+			return React.createElement(
+				'table',
+				{ className: 'actionpanel-table' },
+				React.createElement(
+					'tbody',
+					{ className: 'actionpanel-table-body' },
+					actions,
+					React.createElement(
+						'tr',
+						null,
+						React.createElement(
+							'td',
+							null,
+							React.createElement(
+								'button',
+								{ className: 'actionpanel-table-add', onClick: this.handleAdd },
+								'Add'
+							)
+						)
+					)
+				)
+			);
+		}
+	});
+
+	var ActionLine = React.createClass({
+		displayName: 'ActionLine',
+
+		handleRowClick: function (e) {
+			e.preventDefault();
+			this.props.handleRowClick(e);
+		},
+		handleDelete: function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			this.props.handleDelete();
+		},
+		render: function () {
+			var line = this.props.actionLine;
+			return React.createElement(
+				'tr',
+				{ tabIndex: -1, className: 'actionpanel-table-row', onClick: this.handleRowClick },
+				React.createElement(
+					'td',
+					{ className: 'actionpanel-table-column' },
+					line[0] || ''
+				),
+				React.createElement(
+					'td',
+					{ className: 'actionpanel-table-column' },
+					line[1] || ''
+				),
+				React.createElement(
+					'td',
+					{ className: 'actionpanel-table-column' },
+					line[2]
+				),
+				React.createElement(
+					'td',
+					{ className: 'actionpanel-table-column' },
+					React.createElement(
+						'button',
+						{ className: 'actionpanel-table-column-delete', onClick: this.handleDelete },
+						'X'
+					)
+				)
+			);
+		}
+	});
+
+	var ActionDropDown = React.createClass({
+		displayName: 'ActionDropDown',
+
+		handleDropdownChange: function (e) {
+			//e.preventDefault();
+			//console.log(e.target.value);
+			this.props.handleDropdownChange(e.target.value);
+		},
+		render: function () {
+			var items = (this.props.items || []).map((function (item, i) {
+				return React.createElement(
+					'option',
+					{ key: i, className: 'actionpanel-dropdown-option' },
+					item
+				);
+			}).bind(this));
+			return React.createElement(
+				'div',
+				{ className: 'actionpanel-dropdown' },
+				React.createElement('input', { className: 'actionpanel-dropdown-input', hidden: this.props.hidden || false, value: this.props.value || '', onChange: this.handleDropdownChange }),
+				React.createElement(
+					'select',
+					{ className: 'actionpanel-dropdown-dropdown', onChange: this.handleDropdownChange },
+					items
+				)
+			);
+		}
+	});
+
+/***/ },
+/* 448 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var Actions = __webpack_require__(171);
+	var Reflux = __webpack_require__(172);
+	module.exports = Reflux.createStore({
+		init: function () {
+			this.listenTo(Actions.editingAction, this.onEditingAction);
+		},
+		onEditingAction: function (action, triggerList) {
+			this.trigger(action, triggerList);
+		}
+	});
+
+/***/ },
+/* 449 */
+/***/ function(module, exports, __webpack_require__) {
+
 	var Actions = __webpack_require__(171);
 	var Reflux = __webpack_require__(172);
 	module.exports = Reflux.createStore({
@@ -49202,7 +49528,7 @@
 	});
 
 /***/ },
-/* 448 */
+/* 450 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49218,7 +49544,7 @@
 	});
 
 /***/ },
-/* 449 */
+/* 451 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
@@ -49233,7 +49559,7 @@
 	});
 
 /***/ },
-/* 450 */
+/* 452 */
 /***/ function(module, exports, __webpack_require__) {
 
 	var Actions = __webpack_require__(171);
